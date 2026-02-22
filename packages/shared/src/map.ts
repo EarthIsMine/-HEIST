@@ -39,24 +39,72 @@ export const JAIL_CONFIG: Jail = {
 };
 
 export const OBSTACLES: Obstacle[] = [
-  // Walls around jail creating approach corridors
-  { id: 'obs_0', position: { x: 1000, y: 900 }, width: 140, height: 20 },
-  { id: 'obs_1', position: { x: 1260, y: 900 }, width: 140, height: 20 },
-  { id: 'obs_2', position: { x: 1000, y: 1480 }, width: 140, height: 20 },
-  { id: 'obs_3', position: { x: 1260, y: 1480 }, width: 140, height: 20 },
-  // Vertical walls near jail
-  { id: 'obs_4', position: { x: 900, y: 1000 }, width: 20, height: 140 },
-  { id: 'obs_5', position: { x: 1480, y: 1000 }, width: 20, height: 140 },
-  { id: 'obs_6', position: { x: 900, y: 1260 }, width: 20, height: 140 },
-  { id: 'obs_7', position: { x: 1480, y: 1260 }, width: 20, height: 140 },
-  // Cover near storages
-  { id: 'obs_8', position: { x: 600, y: 500 }, width: 120, height: 20 },
-  { id: 'obs_9', position: { x: 1700, y: 500 }, width: 120, height: 20 },
-  { id: 'obs_10', position: { x: 600, y: 1900 }, width: 120, height: 20 },
-  { id: 'obs_11', position: { x: 1700, y: 1900 }, width: 120, height: 20 },
-  // Mid-map barriers
-  { id: 'obs_12', position: { x: 400, y: 800 }, width: 20, height: 200 },
-  { id: 'obs_13', position: { x: 1980, y: 800 }, width: 20, height: 200 },
-  { id: 'obs_14', position: { x: 400, y: 1400 }, width: 20, height: 200 },
-  { id: 'obs_15', position: { x: 1980, y: 1400 }, width: 20, height: 200 },
+  // ============================================================
+  // Storage rooms: U-shaped enclosures (3 walls, 1 open entrance)
+  // Opening faces AWAY from center so cops can't see in from jail
+  // Interior ~160x160, wall thickness 20
+  // ============================================================
+
+  // Storage 0 (480,360) - open UP (toward map edge)
+  { id: 'r0_l', position: { x: 380, y: 260 }, width: 20, height: 200 },
+  { id: 'r0_r', position: { x: 560, y: 260 }, width: 20, height: 200 },
+  { id: 'r0_b', position: { x: 380, y: 440 }, width: 200, height: 20 },
+
+  // Storage 1 (1920,360) - open UP
+  { id: 'r1_l', position: { x: 1820, y: 260 }, width: 20, height: 200 },
+  { id: 'r1_r', position: { x: 2000, y: 260 }, width: 20, height: 200 },
+  { id: 'r1_b', position: { x: 1820, y: 440 }, width: 200, height: 20 },
+
+  // Storage 2 (2160,1200) - open RIGHT
+  { id: 'r2_t', position: { x: 2060, y: 1100 }, width: 200, height: 20 },
+  { id: 'r2_l', position: { x: 2060, y: 1100 }, width: 20, height: 200 },
+  { id: 'r2_b', position: { x: 2060, y: 1280 }, width: 200, height: 20 },
+
+  // Storage 3 (1920,2040) - open DOWN
+  { id: 'r3_t', position: { x: 1820, y: 1940 }, width: 200, height: 20 },
+  { id: 'r3_l', position: { x: 1820, y: 1940 }, width: 20, height: 200 },
+  { id: 'r3_r', position: { x: 2000, y: 1940 }, width: 20, height: 200 },
+
+  // Storage 4 (480,2040) - open DOWN
+  { id: 'r4_t', position: { x: 380, y: 1940 }, width: 200, height: 20 },
+  { id: 'r4_l', position: { x: 380, y: 1940 }, width: 20, height: 200 },
+  { id: 'r4_r', position: { x: 560, y: 1940 }, width: 20, height: 200 },
+
+  // Storage 5 (240,1200) - open LEFT
+  { id: 'r5_t', position: { x: 140, y: 1100 }, width: 200, height: 20 },
+  { id: 'r5_r', position: { x: 320, y: 1100 }, width: 20, height: 200 },
+  { id: 'r5_b', position: { x: 140, y: 1280 }, width: 200, height: 20 },
+
+  // ============================================================
+  // Mid-map hideout rooms: smaller U-shapes for ambush & escape
+  // Interior ~120x120
+  // ============================================================
+
+  // Hideout NW (700,700) - open RIGHT (toward center)
+  { id: 'h0_t', position: { x: 620, y: 620 }, width: 160, height: 20 },
+  { id: 'h0_l', position: { x: 620, y: 620 }, width: 20, height: 160 },
+  { id: 'h0_b', position: { x: 620, y: 760 }, width: 160, height: 20 },
+
+  // Hideout NE (1700,700) - open LEFT
+  { id: 'h1_t', position: { x: 1620, y: 620 }, width: 160, height: 20 },
+  { id: 'h1_r', position: { x: 1760, y: 620 }, width: 20, height: 160 },
+  { id: 'h1_b', position: { x: 1620, y: 760 }, width: 160, height: 20 },
+
+  // Hideout SW (700,1700) - open RIGHT
+  { id: 'h2_t', position: { x: 620, y: 1620 }, width: 160, height: 20 },
+  { id: 'h2_l', position: { x: 620, y: 1620 }, width: 20, height: 160 },
+  { id: 'h2_b', position: { x: 620, y: 1760 }, width: 160, height: 20 },
+
+  // Hideout SE (1700,1700) - open LEFT
+  { id: 'h3_t', position: { x: 1620, y: 1620 }, width: 160, height: 20 },
+  { id: 'h3_r', position: { x: 1760, y: 1620 }, width: 20, height: 160 },
+  { id: 'h3_b', position: { x: 1620, y: 1760 }, width: 160, height: 20 },
+
+  // ============================================================
+  // Jail area: 4 pillars for partial LOS cover near jail
+  // ============================================================
+  { id: 'jp_0', position: { x: 1040, y: 1040 }, width: 50, height: 50 },
+  { id: 'jp_1', position: { x: 1310, y: 1040 }, width: 50, height: 50 },
+  { id: 'jp_2', position: { x: 1040, y: 1310 }, width: 50, height: 50 },
+  { id: 'jp_3', position: { x: 1310, y: 1310 }, width: 50, height: 50 },
 ];

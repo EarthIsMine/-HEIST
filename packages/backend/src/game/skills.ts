@@ -22,6 +22,8 @@ export function tryStartSteal(
   playerId: string,
   storageId: string,
 ): SkillEvent | null {
+  if (state.phase === 'head_start') return null;
+
   const player = state.players.get(playerId);
   if (!player || player.team !== 'thief') return null;
   if (player.isJailed || player.isStunned || player.channeling) return null;

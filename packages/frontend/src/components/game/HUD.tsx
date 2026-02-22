@@ -59,6 +59,32 @@ const JailInfo = styled.div`
   color: #ff4757;
 `;
 
+const CountdownOverlay = styled.div`
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  text-align: center;
+  pointer-events: none;
+  z-index: 20;
+`;
+
+const CountdownNumber = styled.div`
+  font-size: 96px;
+  font-weight: 900;
+  font-family: 'Fira Code', monospace;
+  color: #ffd700;
+  text-shadow: 0 0 40px rgba(255, 215, 0, 0.5), 0 4px 8px rgba(0, 0, 0, 0.6);
+  line-height: 1;
+`;
+
+const CountdownLabel = styled.div<{ $team: string }>`
+  font-size: 20px;
+  font-weight: 600;
+  color: ${(p) => (p.$team === 'cop' ? '#4a9eff' : '#ff4757')};
+  margin-top: 12px;
+`;
+
 function formatTime(ms: number): string {
   const totalSec = Math.ceil(ms / 1000);
   const min = Math.floor(totalSec / 60);
@@ -76,29 +102,42 @@ export function HUD() {
   const totalCoins = snapshot.totalCoins;
   const jailCount = snapshot.jail.inmates.length;
 
+  const headStartSec = Math.ceil(snapshot.headStartTimerMs / 1000);
+
   return (
-    <HUDContainer>
-      <Panel>
-        <PhaseLabel $phase={snapshot.phase}>
-          {snapshot.phase === 'head_start'
-            ? `Head Start ${formatTime(snapshot.headStartTimerMs)}`
-            : snapshot.phase}
-        </PhaseLabel>
-        <Timer>{formatTime(snapshot.matchTimerMs)}</Timer>
-      </Panel>
+    <>
+      <HUDContainer>
+        <Panel>
+          <PhaseLabel $phase={snapshot.phase}>
+            {snapshot.phase === 'head_start'
+              ? `Head Start ${formatTime(snapshot.headStartTimerMs)}`
+              : snapshot.phase}
+          </PhaseLabel>
+          <Timer>{formatTime(snapshot.matchTimerMs)}</Timer>
+        </Panel>
 
-      <Panel style={{ textAlign: 'center' }}>
-        <CoinsInfo>
-          {totalStolen}/{totalCoins} <span>coins stolen</span>
-        </CoinsInfo>
-        {jailCount > 0 && <JailInfo>{jailCount}/{THIEF_COUNT} thieves jailed</JailInfo>}
-      </Panel>
+        <Panel style={{ textAlign: 'center' }}>
+          <CoinsInfo>
+            {totalStolen}/{totalCoins} <span>coins stolen</span>
+          </CoinsInfo>
+          {jailCount > 0 && <JailInfo>{jailCount}/{THIEF_COUNT} thieves jailed</JailInfo>}
+        </Panel>
 
-      <Panel>
-        {myTeam && (
-          <RoleTag $team={myTeam}>{myTeam === 'cop' ? 'POLICE' : 'THIEF'}</RoleTag>
-        )}
-      </Panel>
-    </HUDContainer>
+        <Panel>
+          {myTeam && (
+            <RoleTag $team={myTeam}>{myTeam === 'cop' ? 'POLICE' : 'THIEF'}</RoleTag>
+          )}
+        </Panel>
+      </HUDContainer>
+
+      {snapshot.phase === 'head_start' && myTeam && (
+        <CountdownOverlay>
+          <CountdownNumber>{headStartSec}</CountdownNumber>
+          <CountdownLabel $team={myTeam}>
+            {myTeam === 'cop' ? 'Get ready to chase!' : 'Move now! Stealing starts after countdown'}
+          </CountdownLabel>
+        </CountdownOverlay>
+      )}
+    </>
   );
 }
