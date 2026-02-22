@@ -1,5 +1,6 @@
 import styled from 'styled-components';
 import { useGameStore } from '../../stores/useGameStore';
+import { THIEF_COUNT } from '@heist/shared';
 
 const HUDContainer = styled.div`
   position: absolute;
@@ -90,7 +91,7 @@ export function HUD() {
         <CoinsInfo>
           {totalStolen}/{totalCoins} <span>coins stolen</span>
         </CoinsInfo>
-        {jailCount > 0 && <JailInfo>{jailCount}/3 thieves jailed</JailInfo>}
+        {jailCount > 0 && <JailInfo>{jailCount}/{THIEF_COUNT} thieves jailed</JailInfo>}
       </Panel>
 
       <Panel>

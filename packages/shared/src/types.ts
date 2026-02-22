@@ -16,6 +16,7 @@ export interface Player {
   team: Team;
   position: Vec2;
   velocity: Vec2;
+  visionRadius: number;
   isJailed: boolean;
   isStunned: boolean;
   stunUntil: number;
@@ -23,6 +24,13 @@ export interface Player {
   channelingStart: number;
   channelingTarget: string | null;
   connected: boolean;
+}
+
+export interface Obstacle {
+  id: string;
+  position: Vec2;
+  width: number;
+  height: number;
 }
 
 export interface Storage {
@@ -63,6 +71,7 @@ export interface StateSnapshot {
   players: Player[];
   storages: Storage[];
   jail: Jail;
+  obstacles: Obstacle[];
   stolenCoins: number;
   totalCoins: number;
 }

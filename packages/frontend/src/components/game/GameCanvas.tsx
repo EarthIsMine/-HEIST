@@ -2,18 +2,17 @@ import { useRef, useEffect } from 'react';
 import styled from 'styled-components';
 import { Renderer } from '../../canvas/Renderer';
 import { initKeyboard } from '../../input/keyboard';
-import { CANVAS_WIDTH, CANVAS_HEIGHT } from '@heist/shared';
 
 const CanvasWrapper = styled.div`
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  flex: 1;
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
 `;
 
 const StyledCanvas = styled.canvas`
-  border: 2px solid #1e2a3a;
-  border-radius: 8px;
+  display: block;
+  width: 100%;
+  height: 100%;
 `;
 
 export function GameCanvas() {
@@ -23,20 +22,32 @@ export function GameCanvas() {
     const canvas = canvasRef.current;
     if (!canvas) return;
 
-    const renderer = new Renderer(canvas);
+    const dpr = window.devicePixelRatio || 1;
+
+    const resize = () => {
+      const rect = canvas.getBoundingClientRect();
+      canvas.width = rect.width * dpr;
+      canvas.height = rect.height * dpr;
+    };
+    resize();
+
+    const renderer = new Renderer(canvas, dpr);
     renderer.start();
 
     const cleanupKeyboard = initKeyboard();
 
+    window.addEventListener('resize', resize);
+
     return () => {
       renderer.stop();
       cleanupKeyboard();
+      window.removeEventListener('resize', resize);
     };
   }, []);
 
   return (
     <CanvasWrapper>
-      <StyledCanvas ref={canvasRef} width={CANVAS_WIDTH} height={CANVAS_HEIGHT} />
+      <StyledCanvas ref={canvasRef} />
     </CanvasWrapper>
   );
 }

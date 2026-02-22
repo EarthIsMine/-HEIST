@@ -4,8 +4,11 @@ import {
   MAP_HEIGHT,
   PLAYER_RADIUS,
   TOTAL_COINS,
+  COP_VISION_RADIUS,
+  THIEF_VISION_RADIUS,
 } from '@heist/shared';
-import { createStorages, COP_SPAWNS, THIEF_SPAWNS, JAIL_CONFIG } from '@heist/shared';
+import { createStorages, COP_SPAWNS, THIEF_SPAWNS, JAIL_CONFIG, OBSTACLES } from '@heist/shared';
+import { distance, hasLineOfSight } from './physics.js';
 
 export interface PlayerInit {
   id: string;
@@ -45,6 +48,7 @@ export class GameState {
         team: init.team,
         position: { ...spawnPos },
         velocity: { x: 0, y: 0 },
+        visionRadius: init.team === 'cop' ? COP_VISION_RADIUS : THIEF_VISION_RADIUS,
         isJailed: false,
         isStunned: false,
         stunUntil: 0,
@@ -84,6 +88,35 @@ export class GameState {
       players: [...this.players.values()],
       storages: this.storages,
       jail: this.jail,
+      obstacles: OBSTACLES,
+      stolenCoins: this.stolenCoins,
+      totalCoins: TOTAL_COINS,
+    };
+  }
+
+  toFilteredSnapshot(playerId: string): StateSnapshot {
+    const viewer = this.players.get(playerId);
+    if (!viewer) return this.toSnapshot();
+
+    const visiblePlayers = [...this.players.values()].filter((p) => {
+      // Always show self and teammates
+      if (p.id === playerId || p.team === viewer.team) return true;
+      // Check distance
+      const dist = distance(viewer.position, p.position);
+      if (dist > viewer.visionRadius) return false;
+      // Check line of sight
+      return hasLineOfSight(viewer.position, p.position, OBSTACLES);
+    });
+
+    return {
+      tick: this.tick,
+      phase: this.phase,
+      matchTimerMs: this.matchTimerMs,
+      headStartTimerMs: this.headStartTimerMs,
+      players: visiblePlayers,
+      storages: this.storages,
+      jail: this.jail,
+      obstacles: OBSTACLES,
       stolenCoins: this.stolenCoins,
       totalCoins: TOTAL_COINS,
     };

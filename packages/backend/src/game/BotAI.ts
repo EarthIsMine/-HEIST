@@ -4,6 +4,9 @@ import {
   ARREST_RANGE,
   BREAK_JAIL_RANGE,
   TICK_MS,
+  MAP_WIDTH,
+  MAP_HEIGHT,
+  PLAYER_RADIUS,
 } from '@heist/shared';
 import type { GameState } from './GameState.js';
 import { distance } from './physics.js';
@@ -159,8 +162,8 @@ export class BotAI {
     if (bot.wanderTimer <= 0) {
       const angle = Math.random() * Math.PI * 2;
       bot.targetPos = {
-        x: 200 + Math.random() * 600,
-        y: 200 + Math.random() * 600,
+        x: PLAYER_RADIUS + Math.random() * (MAP_WIDTH - PLAYER_RADIUS * 2),
+        y: PLAYER_RADIUS + Math.random() * (MAP_HEIGHT - PLAYER_RADIUS * 2),
       };
       bot.wanderTimer = 2000 + Math.random() * 3000;
     }

@@ -8,10 +8,9 @@ import type {
   RoomPlayer,
   Team,
   Vec2,
-  StateSnapshot,
   GameResult,
 } from '@heist/shared';
-import { MAX_PLAYERS, ENTRY_FEE_LAMPORTS } from '@heist/shared';
+import { MAX_PLAYERS, ENTRY_FEE_LAMPORTS, COP_COUNT, THIEF_COUNT } from '@heist/shared';
 import { GameLoop } from '../game/GameLoop.js';
 import type { PlayerInit } from '../game/GameState.js';
 import { refundAllPlayers } from '../solana/payout.js';
@@ -19,8 +18,8 @@ import { log } from '../utils/logger.js';
 
 type TypedIO = Server<ClientToServerEvents, ServerToClientEvents, InterServerEvents, SocketData>;
 
-const BOT_NAMES_COP = ['Officer Bot', 'Deputy Bot', 'Sgt. Bot'];
-const BOT_NAMES_THIEF = ['Bandit Bot', 'Rogue Bot', 'Shadow Bot'];
+const BOT_NAMES_COP = ['Officer Bot', 'Deputy Bot'];
+const BOT_NAMES_THIEF = ['Bandit Bot', 'Rogue Bot', 'Shadow Bot', 'Phantom Bot'];
 
 export class Room {
   id: string;
@@ -171,9 +170,9 @@ export class Room {
       });
     }
 
-    // Fill cops with bots up to 3
+    // Fill cops with bots
     let botCopIdx = 0;
-    while (copCount < 3) {
+    while (copCount < COP_COUNT) {
       const botId = `bot_cop_${botCopIdx}`;
       playerInits.push({
         id: botId,
@@ -186,9 +185,9 @@ export class Room {
       botCopIdx++;
     }
 
-    // Fill thieves with bots up to 3
+    // Fill thieves with bots
     let botThiefIdx = 0;
-    while (thiefCount < 3) {
+    while (thiefCount < THIEF_COUNT) {
       const botId = `bot_thief_${botThiefIdx}`;
       playerInits.push({
         id: botId,
@@ -206,8 +205,13 @@ export class Room {
 
     this.gameLoop = new GameLoop(
       playerInits,
-      (snapshot: StateSnapshot) => {
-        this.io.to(this.id).emit('state_snapshot', snapshot);
+      (getSnapshot) => {
+        for (const [socketId] of this.players) {
+          const socket = this.io.sockets.sockets.get(socketId);
+          if (socket) {
+            socket.emit('state_snapshot', getSnapshot(socketId));
+          }
+        }
       },
       (result: GameResult) => {
         this.phase = 'ended';

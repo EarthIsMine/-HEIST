@@ -1,7 +1,7 @@
 import type { StateSnapshot } from '@heist/shared';
 import { MAP_WIDTH, MAP_HEIGHT } from '@heist/shared';
 
-const GRID_SIZE = 50;
+const GRID_SIZE = 100;
 
 export class MapLayer {
   draw(ctx: CanvasRenderingContext2D, snapshot: StateSnapshot): void {
@@ -27,30 +27,37 @@ export class MapLayer {
 
     // Map border
     ctx.strokeStyle = '#3a4a5a';
-    ctx.lineWidth = 3;
+    ctx.lineWidth = 4;
     ctx.strokeRect(0, 0, MAP_WIDTH, MAP_HEIGHT);
+
+    // Obstacles
+    for (const obs of snapshot.obstacles) {
+      ctx.fillStyle = '#2a3a4a';
+      ctx.fillRect(obs.position.x, obs.position.y, obs.width, obs.height);
+      ctx.strokeStyle = '#3d5060';
+      ctx.lineWidth = 2;
+      ctx.strokeRect(obs.position.x, obs.position.y, obs.width, obs.height);
+    }
 
     // Storages
     for (const storage of snapshot.storages) {
       const ratio = storage.remainingCoins / storage.totalCoins;
 
-      // Storage circle background
       ctx.beginPath();
       ctx.arc(storage.position.x, storage.position.y, storage.radius, 0, Math.PI * 2);
       ctx.fillStyle = ratio > 0 ? 'rgba(255, 215, 0, 0.15)' : 'rgba(100, 100, 100, 0.1)';
       ctx.fill();
       ctx.strokeStyle = ratio > 0 ? '#ffd700' : '#555';
-      ctx.lineWidth = 2;
+      ctx.lineWidth = 3;
       ctx.stroke();
 
-      // Fill arc showing remaining coins
       if (ratio > 0) {
         ctx.beginPath();
         ctx.moveTo(storage.position.x, storage.position.y);
         ctx.arc(
           storage.position.x,
           storage.position.y,
-          storage.radius - 4,
+          storage.radius - 6,
           -Math.PI / 2,
           -Math.PI / 2 + ratio * Math.PI * 2,
         );
@@ -59,9 +66,8 @@ export class MapLayer {
         ctx.fill();
       }
 
-      // Coin count text
       ctx.fillStyle = ratio > 0 ? '#ffd700' : '#555';
-      ctx.font = 'bold 14px system-ui';
+      ctx.font = 'bold 20px system-ui';
       ctx.textAlign = 'center';
       ctx.textBaseline = 'middle';
       ctx.fillText(
@@ -77,26 +83,25 @@ export class MapLayer {
     ctx.arc(jail.position.x, jail.position.y, jail.radius, 0, Math.PI * 2);
     ctx.fillStyle = 'rgba(136, 136, 136, 0.1)';
     ctx.fill();
-    ctx.setLineDash([8, 4]);
+    ctx.setLineDash([10, 6]);
     ctx.strokeStyle = '#888';
-    ctx.lineWidth = 2;
+    ctx.lineWidth = 3;
     ctx.stroke();
     ctx.setLineDash([]);
 
-    // Jail label
     ctx.fillStyle = '#888';
-    ctx.font = 'bold 12px system-ui';
+    ctx.font = 'bold 18px system-ui';
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
-    ctx.fillText('JAIL', jail.position.x, jail.position.y - jail.radius - 10);
+    ctx.fillText('JAIL', jail.position.x, jail.position.y - jail.radius - 14);
 
-    // Inmate count
     if (jail.inmates.length > 0) {
       ctx.fillStyle = '#ff4757';
+      ctx.font = 'bold 16px system-ui';
       ctx.fillText(
         `${jail.inmates.length} imprisoned`,
         jail.position.x,
-        jail.position.y + jail.radius + 14,
+        jail.position.y + jail.radius + 20,
       );
     }
   }

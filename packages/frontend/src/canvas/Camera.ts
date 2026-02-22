@@ -13,6 +13,11 @@ export class Camera {
     this.viewH = viewH;
   }
 
+  setViewport(w: number, h: number): void {
+    this.viewW = w;
+    this.viewH = h;
+  }
+
   follow(target: Vec2, dt: number): void {
     const targetX = target.x - this.viewW / 2;
     const targetY = target.y - this.viewH / 2;

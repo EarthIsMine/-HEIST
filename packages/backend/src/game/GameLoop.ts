@@ -5,8 +5,9 @@ import {
   HEAD_START_MS,
   TOTAL_COINS,
 } from '@heist/shared';
+import { OBSTACLES } from '@heist/shared';
 import { GameState, type PlayerInit } from './GameState.js';
-import { updatePlayerMovement } from './physics.js';
+import { updatePlayerMovement, resolveObstacleCollision } from './physics.js';
 import {
   tryStartSteal,
   tryStartBreakJail,
@@ -23,14 +24,14 @@ export class GameLoop {
   private state: GameState;
   private intervalId: NodeJS.Timeout | null = null;
   private startTime: number = 0;
-  private onTick: (snapshot: StateSnapshot) => void;
+  private onTick: (getSnapshot: (playerId: string) => StateSnapshot) => void;
   private onEnd: (result: GameResult) => void;
   private onSkillEvent?: (event: SkillEvent) => void;
   private botAI: BotAI;
 
   constructor(
     players: PlayerInit[],
-    onTick: (snapshot: StateSnapshot) => void,
+    onTick: (getSnapshot: (playerId: string) => StateSnapshot) => void,
     onEnd: (result: GameResult) => void,
     onSkillEvent?: (event: SkillEvent) => void,
     botIds?: string[],
@@ -66,9 +67,10 @@ export class GameLoop {
       // Update stuns
       updateStuns(this.state, now);
 
-      // Update movement
+      // Update movement + obstacle collision
       for (const [, player] of this.state.players) {
         updatePlayerMovement(player, dt, this.state.phase);
+        resolveObstacleCollision(player, OBSTACLES);
       }
 
       // Update bot AI
@@ -97,8 +99,8 @@ export class GameLoop {
         return;
       }
 
-      // Broadcast snapshot
-      this.onTick(this.state.toSnapshot());
+      // Broadcast per-player filtered snapshots
+      this.onTick((playerId: string) => this.state.toFilteredSnapshot(playerId));
     }, TICK_MS);
   }
 

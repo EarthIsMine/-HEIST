@@ -35,7 +35,6 @@ export function tryStartSteal(
   player.channeling = 'steal';
   player.channelingStart = Date.now();
   player.channelingTarget = storageId;
-  player.velocity = { x: 0, y: 0 };
 
   return {
     type: 'skill_started',
@@ -129,8 +128,8 @@ export function updateChanneling(state: GameState, dt: number, now: number): Ski
   for (const [, player] of state.players) {
     if (!player.channeling) continue;
 
-    // Check if player moved (velocity non-zero = interrupt)
-    if (player.velocity.x !== 0 || player.velocity.y !== 0) {
+    // break_jail is interrupted by movement; steal allows slow movement
+    if (player.channeling === 'break_jail' && (player.velocity.x !== 0 || player.velocity.y !== 0)) {
       player.channeling = null;
       player.channelingTarget = null;
       events.push({

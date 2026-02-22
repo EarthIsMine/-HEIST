@@ -43,20 +43,15 @@ export class EntityLayer {
 
     ctx.save();
 
-    // Stunned: pulsing opacity
     if (player.isStunned) {
       ctx.globalAlpha = 0.4 + Math.sin(Date.now() / 150) * 0.2;
     }
 
-    // Jailed: dimmed
     if (player.isJailed) {
       ctx.globalAlpha = 0.3;
     }
 
-    // Bounce when moving
-    const bounce = moving ? Math.sin(Date.now() / 100) * 3 : 0;
-
-    // Flip based on movement direction
+    const bounce = moving ? Math.sin(Date.now() / 100) * 4 : 0;
     const facingLeft = player.velocity.x < -0.1;
 
     const spriteKey = this.getSpriteKey(player, moving);
@@ -68,25 +63,17 @@ export class EntityLayer {
       if (facingLeft) {
         ctx.scale(-1, 1);
       }
-      ctx.drawImage(
-        sprite,
-        -SPRITE_SIZE / 2,
-        -SPRITE_SIZE / 2,
-        SPRITE_SIZE,
-        SPRITE_SIZE,
-      );
+      ctx.drawImage(sprite, -SPRITE_SIZE / 2, -SPRITE_SIZE / 2, SPRITE_SIZE, SPRITE_SIZE);
       ctx.restore();
 
-      // Local player: arrow indicator above sprite
       if (isLocal) {
         ctx.fillStyle = '#ffffff';
-        ctx.font = 'bold 12px system-ui';
+        ctx.font = 'bold 18px system-ui';
         ctx.textAlign = 'center';
-        const arrowBounce = Math.sin(Date.now() / 300) * 3;
-        ctx.fillText('\u25BC', x, y - SPRITE_SIZE / 2 - 8 + arrowBounce);
+        const arrowBounce = Math.sin(Date.now() / 300) * 4;
+        ctx.fillText('\u25BC', x, y - SPRITE_SIZE / 2 - 12 + arrowBounce);
       }
     } else {
-      // Fallback: colored circle when sprite not loaded
       ctx.beginPath();
       ctx.arc(x, y + bounce, PLAYER_RADIUS, 0, Math.PI * 2);
       ctx.fillStyle = isCop ? COP_COLOR : THIEF_COLOR;
@@ -96,45 +83,40 @@ export class EntityLayer {
       ctx.stroke();
     }
 
-    // Channeling indicator (text label instead of circle)
     if (player.channeling) {
       const pulse = 0.7 + Math.sin(Date.now() / 200) * 0.3;
       ctx.globalAlpha = pulse;
-      ctx.fillStyle =
-        player.channeling === 'steal' ? '#ffd700' : '#00ff80';
-      ctx.font = 'bold 10px system-ui';
+      ctx.fillStyle = player.channeling === 'steal' ? '#ffd700' : '#00ff80';
+      ctx.font = 'bold 14px system-ui';
       ctx.textAlign = 'center';
       ctx.fillText(
         player.channeling === 'steal' ? 'STEALING...' : 'CHANNELING...',
         x,
-        y + SPRITE_SIZE / 2 + 2,
+        y + SPRITE_SIZE / 2 + 6,
       );
       ctx.globalAlpha = 1;
     }
 
-    // Stunned stars
     if (player.isStunned) {
       ctx.fillStyle = '#ffff00';
-      ctx.font = '14px system-ui';
+      ctx.font = '20px system-ui';
       ctx.textAlign = 'center';
-      const starBounce = Math.sin(Date.now() / 200) * 4;
-      ctx.fillText('*', x - 10, y - SPRITE_SIZE / 2 - 2 + starBounce);
-      ctx.fillText('*', x + 10, y - SPRITE_SIZE / 2 - 2 - starBounce);
+      const starBounce = Math.sin(Date.now() / 200) * 5;
+      ctx.fillText('*', x - 14, y - SPRITE_SIZE / 2 - 4 + starBounce);
+      ctx.fillText('*', x + 14, y - SPRITE_SIZE / 2 - 4 - starBounce);
     }
 
     ctx.restore();
 
-    // Name tag (always full opacity)
     ctx.fillStyle = '#e8e8e8';
-    ctx.font = '10px system-ui';
+    ctx.font = '14px system-ui';
     ctx.textAlign = 'center';
     ctx.textBaseline = 'bottom';
-    ctx.fillText(player.name, x, y - SPRITE_SIZE / 2 - 2);
+    ctx.fillText(player.name, x, y - SPRITE_SIZE / 2 - 4);
 
-    // Role label
     ctx.fillStyle = isCop ? COP_COLOR : THIEF_COLOR;
-    ctx.font = 'bold 9px system-ui';
+    ctx.font = 'bold 12px system-ui';
     ctx.textAlign = 'center';
-    ctx.fillText(isCop ? 'COP' : 'THIEF', x, y + SPRITE_SIZE / 2 + 12);
+    ctx.fillText(isCop ? 'COP' : 'THIEF', x, y + SPRITE_SIZE / 2 + 20);
   }
 }
