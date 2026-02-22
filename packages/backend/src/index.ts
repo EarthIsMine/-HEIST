@@ -12,6 +12,10 @@ const roomManager = new RoomManager(io, MIN_PLAYERS);
 io.on('connection', (socket) => {
   log('Server', `Client connected: ${socket.id}`);
 
+  socket.on('list_rooms', (ack) => {
+    ack(roomManager.listRooms());
+  });
+
   socket.on('join_room', (roomId, payload, ack) => {
     roomManager.handleJoinRoom(socket, roomId, payload, ack);
   });

@@ -9,7 +9,7 @@ import { useGameStore } from '../stores/useGameStore';
 import { getSocket } from '../net/socket';
 import { buildEntryFeeTx } from '../solana/entryFee';
 import { ENTRY_FEE_LAMPORTS } from '@heist/shared';
-import type { Team } from '@heist/shared';
+import type { Team, RoomInfo } from '@heist/shared';
 
 const Container = styled.div`
   width: 100%;
@@ -119,6 +119,55 @@ const InfoText = styled.p`
   margin-top: 8px;
 `;
 
+const RoomCard = styled.div`
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 16px;
+  background: #0a0e17;
+  border: 1px solid #1e2a3a;
+  border-radius: 8px;
+  margin-bottom: 8px;
+  cursor: pointer;
+  transition: border-color 0.15s;
+
+  &:hover {
+    border-color: #00d4ff;
+  }
+`;
+
+const RoomCardInfo = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+`;
+
+const RoomCardName = styled.span`
+  font-size: 14px;
+  font-weight: 600;
+  color: #e8e8e8;
+`;
+
+const RoomCardPlayers = styled.span`
+  font-size: 12px;
+  color: #8892a4;
+`;
+
+const Divider = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 16px 0;
+  color: #8892a4;
+  font-size: 12px;
+
+  &::before, &::after {
+    content: '';
+    flex: 1;
+    border-top: 1px solid #1e2a3a;
+  }
+`;
+
 const TeamSelector = styled.div`
   display: flex;
   gap: 12px;
@@ -160,11 +209,25 @@ export function LobbyPage() {
   const setReady = useLobbyStore((s) => s.setReady);
   const snapshot = useGameStore((s) => s.snapshot);
 
-  const [roomId, setRoomId] = useState('heist-room-1');
+  const [roomId, setRoomId] = useState('');
   const [playerName, setPlayerName] = useState('');
   const [paying, setPaying] = useState(false);
   const [balance, setBalance] = useState<number | null>(null);
   const [selectedTeam, setSelectedTeam] = useState<Team>('thief');
+  const [availableRooms, setAvailableRooms] = useState<RoomInfo[]>([]);
+
+  // Fetch room list periodically
+  useEffect(() => {
+    if (currentRoom) return;
+    const fetchRooms = () => {
+      getSocket().emit('list_rooms', (rooms) => {
+        setAvailableRooms(rooms);
+      });
+    };
+    fetchRooms();
+    const interval = setInterval(fetchRooms, 3000);
+    return () => clearInterval(interval);
+  }, [currentRoom]);
 
   // Navigate to game when game starts
   useEffect(() => {
@@ -252,25 +315,64 @@ export function LobbyPage() {
 
       <Content>
         {!currentRoom ? (
-          <Section>
-            <SectionTitle>Join a Room</SectionTitle>
-            <Input
-              placeholder="Your name"
-              value={playerName}
-              onChange={(e) => setPlayerName(e.target.value)}
-            />
-            <Input
-              placeholder="Room ID"
-              value={roomId}
-              onChange={(e) => setRoomId(e.target.value)}
-            />
-            <Button onClick={handleJoin} disabled={!connected}>
-              {connected ? 'Join Room' : 'Connect Wallet First'}
-            </Button>
-            {balance !== null && (
-              <InfoText>Balance: {balance.toFixed(4)} SOL (devnet)</InfoText>
+          <>
+            <Section>
+              <SectionTitle>Your Name</SectionTitle>
+              <Input
+                placeholder="Enter your name"
+                value={playerName}
+                onChange={(e) => setPlayerName(e.target.value)}
+              />
+              {balance !== null && (
+                <InfoText>Balance: {balance.toFixed(4)} SOL (devnet)</InfoText>
+              )}
+            </Section>
+
+            {availableRooms.length > 0 && (
+              <Section>
+                <SectionTitle>Available Rooms</SectionTitle>
+                {availableRooms.map((room) => (
+                  <RoomCard
+                    key={room.id}
+                    onClick={() => {
+                      setRoomId(room.id);
+                      if (connected && publicKey) {
+                        const name = playerName.trim() || `Player-${publicKey.toBase58().slice(0, 4)}`;
+                        getSocket().emit(
+                          'join_room',
+                          room.id,
+                          { name, walletAddress: publicKey.toBase58() },
+                          (result) => {
+                            if (!result.ok) alert(result.error || 'Failed to join');
+                          },
+                        );
+                      }
+                    }}
+                  >
+                    <RoomCardInfo>
+                      <RoomCardName>{room.name}</RoomCardName>
+                      <RoomCardPlayers>
+                        {room.players.length}/{room.maxPlayers} players
+                      </RoomCardPlayers>
+                    </RoomCardInfo>
+                    <Badge $color="#00d4ff">JOIN</Badge>
+                  </RoomCard>
+                ))}
+              </Section>
             )}
-          </Section>
+
+            <Section>
+              <SectionTitle>Create or Join Room</SectionTitle>
+              <Input
+                placeholder="Room ID (e.g. my-room)"
+                value={roomId}
+                onChange={(e) => setRoomId(e.target.value)}
+              />
+              <Button onClick={handleJoin} disabled={!connected || !roomId.trim()}>
+                {connected ? 'Create / Join Room' : 'Connect Wallet First'}
+              </Button>
+            </Section>
+          </>
         ) : (
           <>
             <Section>

@@ -60,3 +60,46 @@ export async function distributePayouts(
 
   return signatures;
 }
+
+/** Refund all players when game ends abnormally (disconnect, error, etc.) */
+export async function refundAllPlayers(
+  players: { walletAddress: string }[],
+  amountPerPlayer: number,
+): Promise<string[]> {
+  if (amountPerPlayer <= 0) {
+    log('Refund', 'No entry fee to refund');
+    return [];
+  }
+
+  const escrow = getEscrowKeypair();
+  if (!escrow) {
+    log('Refund', 'Skipping refunds (no escrow key)');
+    return [];
+  }
+
+  const realPlayers = players.filter((p) => p.walletAddress !== 'bot');
+  log('Refund', `Refunding ${realPlayers.length} players (${amountPerPlayer} lamports each)`);
+
+  const signatures: string[] = [];
+
+  for (const player of realPlayers) {
+    try {
+      const tx = new Transaction().add(
+        SystemProgram.transfer({
+          fromPubkey: escrow.publicKey,
+          toPubkey: new PublicKey(player.walletAddress),
+          lamports: amountPerPlayer,
+        }),
+      );
+
+      const sig = await sendAndConfirmTransaction(connection, tx, [escrow]);
+      signatures.push(sig);
+      log('Refund', `Refunded ${amountPerPlayer} lamports to ${player.walletAddress}: ${sig}`);
+    } catch (err) {
+      log('Refund', `Failed refund to ${player.walletAddress}: ${err}`);
+      signatures.push('FAILED');
+    }
+  }
+
+  return signatures;
+}

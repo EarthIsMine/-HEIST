@@ -64,6 +64,51 @@ const reasonLabels: Record<string, string> = {
   time_expired: 'Time ran out!',
 };
 
+export function AbortModal() {
+  const showAbortModal = useGameStore((s) => s.showAbortModal);
+  const abortInfo = useGameStore((s) => s.abortInfo);
+  const resetGame = useGameStore((s) => s.reset);
+  const resetLobby = useLobbyStore((s) => s.reset);
+  const navigate = useNavigate();
+
+  if (!showAbortModal || !abortInfo) return null;
+
+  return (
+    <Overlay>
+      <Modal>
+        <Title $win={false}>GAME ABORTED</Title>
+        <Reason>{abortInfo.reason}</Reason>
+
+        {abortInfo.refundTxSignatures.length > 0 && (
+          <div style={{ marginTop: 16 }}>
+            <Stat style={{ fontSize: 13 }}>Refund Transactions:</Stat>
+            {abortInfo.refundTxSignatures.map((sig, i) => (
+              <TxLink
+                key={i}
+                href={`https://explorer.solana.com/tx/${sig}?cluster=devnet`}
+                target="_blank"
+                rel="noopener"
+              >
+                {sig.slice(0, 20)}...{sig.slice(-20)}
+              </TxLink>
+            ))}
+          </div>
+        )}
+
+        <BackButton
+          onClick={() => {
+            resetGame();
+            resetLobby();
+            navigate('/');
+          }}
+        >
+          Back to Lobby
+        </BackButton>
+      </Modal>
+    </Overlay>
+  );
+}
+
 export function ResultModal() {
   const showResultModal = useGameStore((s) => s.showResultModal);
   const gameResult = useGameStore((s) => s.gameResult);

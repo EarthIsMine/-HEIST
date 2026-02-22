@@ -1,23 +1,45 @@
-import type { StateSnapshot, PlayerId, Player } from '@heist/shared';
+import type { StateSnapshot, Player } from '@heist/shared';
 import { PLAYER_RADIUS } from '@heist/shared';
+import { spriteManager, type SpriteKey } from '../SpriteManager';
 
 const COP_COLOR = '#4a9eff';
-const COP_LIGHT = '#7bb8ff';
 const THIEF_COLOR = '#ff4757';
-const THIEF_LIGHT = '#ff6b7a';
+const SPRITE_SIZE = PLAYER_RADIUS * 3.5;
 
 export class EntityLayer {
+  private prevPositions: Map<string, { x: number; y: number }> = new Map();
+
   draw(ctx: CanvasRenderingContext2D, snapshot: StateSnapshot, localPlayerId: string | null): void {
     for (const player of snapshot.players) {
       this.drawPlayer(ctx, player, player.id === localPlayerId);
     }
   }
 
+  private isMoving(player: Player): boolean {
+    const prev = this.prevPositions.get(player.id);
+    const moving =
+      prev !== undefined &&
+      (Math.abs(player.position.x - prev.x) > 0.5 ||
+        Math.abs(player.position.y - prev.y) > 0.5);
+    this.prevPositions.set(player.id, { x: player.position.x, y: player.position.y });
+    return moving;
+  }
+
+  private getSpriteKey(player: Player, moving: boolean): SpriteKey {
+    if (player.team === 'thief') {
+      if (player.channeling === 'steal') return 'thief_drain';
+      if (moving) return 'thief_move';
+      return 'thief_active';
+    } else {
+      if (moving) return 'cop_move';
+      return 'cop_active';
+    }
+  }
+
   private drawPlayer(ctx: CanvasRenderingContext2D, player: Player, isLocal: boolean): void {
     const { x, y } = player.position;
     const isCop = player.team === 'cop';
-    const baseColor = isCop ? COP_COLOR : THIEF_COLOR;
-    const lightColor = isCop ? COP_LIGHT : THIEF_LIGHT;
+    const moving = this.isMoving(player);
 
     ctx.save();
 
@@ -31,37 +53,73 @@ export class EntityLayer {
       ctx.globalAlpha = 0.3;
     }
 
-    // Player circle
-    ctx.beginPath();
-    ctx.arc(x, y, PLAYER_RADIUS, 0, Math.PI * 2);
-    ctx.fillStyle = isLocal ? lightColor : baseColor;
-    ctx.fill();
+    // Bounce when moving
+    const bounce = moving ? Math.sin(Date.now() / 100) * 3 : 0;
 
-    // Border
-    ctx.strokeStyle = isLocal ? '#ffffff' : 'rgba(255,255,255,0.3)';
-    ctx.lineWidth = isLocal ? 3 : 1.5;
-    ctx.stroke();
+    // Flip based on movement direction
+    const facingLeft = player.velocity.x < -0.1;
 
-    // Channeling indicator
-    if (player.channeling) {
-      const pulse = 1 + Math.sin(Date.now() / 200) * 0.3;
+    const spriteKey = this.getSpriteKey(player, moving);
+    const sprite = spriteManager.get(spriteKey);
+
+    if (sprite) {
+      ctx.save();
+      ctx.translate(x, y + bounce);
+      if (facingLeft) {
+        ctx.scale(-1, 1);
+      }
+      ctx.drawImage(
+        sprite,
+        -SPRITE_SIZE / 2,
+        -SPRITE_SIZE / 2,
+        SPRITE_SIZE,
+        SPRITE_SIZE,
+      );
+      ctx.restore();
+
+      // Local player: arrow indicator above sprite
+      if (isLocal) {
+        ctx.fillStyle = '#ffffff';
+        ctx.font = 'bold 12px system-ui';
+        ctx.textAlign = 'center';
+        const arrowBounce = Math.sin(Date.now() / 300) * 3;
+        ctx.fillText('\u25BC', x, y - SPRITE_SIZE / 2 - 8 + arrowBounce);
+      }
+    } else {
+      // Fallback: colored circle when sprite not loaded
       ctx.beginPath();
-      ctx.arc(x, y, PLAYER_RADIUS + 6 * pulse, 0, Math.PI * 2);
-      ctx.strokeStyle =
-        player.channeling === 'steal'
-          ? 'rgba(255, 215, 0, 0.6)'
-          : 'rgba(0, 255, 128, 0.6)';
-      ctx.lineWidth = 2;
+      ctx.arc(x, y + bounce, PLAYER_RADIUS, 0, Math.PI * 2);
+      ctx.fillStyle = isCop ? COP_COLOR : THIEF_COLOR;
+      ctx.fill();
+      ctx.strokeStyle = isLocal ? '#ffffff' : 'rgba(255,255,255,0.3)';
+      ctx.lineWidth = isLocal ? 3 : 1.5;
       ctx.stroke();
+    }
+
+    // Channeling indicator (text label instead of circle)
+    if (player.channeling) {
+      const pulse = 0.7 + Math.sin(Date.now() / 200) * 0.3;
+      ctx.globalAlpha = pulse;
+      ctx.fillStyle =
+        player.channeling === 'steal' ? '#ffd700' : '#00ff80';
+      ctx.font = 'bold 10px system-ui';
+      ctx.textAlign = 'center';
+      ctx.fillText(
+        player.channeling === 'steal' ? 'STEALING...' : 'CHANNELING...',
+        x,
+        y + SPRITE_SIZE / 2 + 2,
+      );
+      ctx.globalAlpha = 1;
     }
 
     // Stunned stars
     if (player.isStunned) {
       ctx.fillStyle = '#ffff00';
-      ctx.font = '12px system-ui';
+      ctx.font = '14px system-ui';
       ctx.textAlign = 'center';
-      ctx.fillText('*', x - 8, y - PLAYER_RADIUS - 5);
-      ctx.fillText('*', x + 8, y - PLAYER_RADIUS - 5);
+      const starBounce = Math.sin(Date.now() / 200) * 4;
+      ctx.fillText('*', x - 10, y - SPRITE_SIZE / 2 - 2 + starBounce);
+      ctx.fillText('*', x + 10, y - SPRITE_SIZE / 2 - 2 - starBounce);
     }
 
     ctx.restore();
@@ -71,11 +129,12 @@ export class EntityLayer {
     ctx.font = '10px system-ui';
     ctx.textAlign = 'center';
     ctx.textBaseline = 'bottom';
-    ctx.fillText(player.name, x, y - PLAYER_RADIUS - 4);
+    ctx.fillText(player.name, x, y - SPRITE_SIZE / 2 - 2);
 
     // Role label
     ctx.fillStyle = isCop ? COP_COLOR : THIEF_COLOR;
     ctx.font = 'bold 9px system-ui';
-    ctx.fillText(isCop ? 'COP' : 'THIEF', x, y + PLAYER_RADIUS + 12);
+    ctx.textAlign = 'center';
+    ctx.fillText(isCop ? 'COP' : 'THIEF', x, y + SPRITE_SIZE / 2 + 12);
   }
 }

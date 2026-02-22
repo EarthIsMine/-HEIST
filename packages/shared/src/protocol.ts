@@ -9,6 +9,10 @@ import type {
 } from './types';
 
 export interface ClientToServerEvents {
+  list_rooms: (
+    ack: (rooms: RoomInfo[]) => void,
+  ) => void;
+
   join_room: (
     roomId: RoomId,
     payload: { name: string; walletAddress: string },
@@ -59,6 +63,11 @@ export interface ServerToClientEvents {
   cops_stunned: (copIds: PlayerId[]) => void;
 
   game_ended: (result: GameResult) => void;
+
+  game_aborted: (payload: {
+    reason: string;
+    refundTxSignatures: string[];
+  }) => void;
 
   error: (payload: { code: string; message: string }) => void;
 }

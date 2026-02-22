@@ -7,6 +7,7 @@ import type {
   Vec2,
   Team,
 } from '@heist/shared';
+import type { RoomInfo } from '@heist/shared';
 import { v4 as uuidv4 } from 'uuid';
 import { Room } from './Room.js';
 import { log } from '../utils/logger.js';
@@ -126,6 +127,12 @@ export class RoomManager {
       this.rooms.delete(room.id);
       log('RoomManager', `Room ${room.id} deleted (empty)`);
     }
+  }
+
+  listRooms(): RoomInfo[] {
+    return [...this.rooms.values()]
+      .filter((r) => r.phase === 'filling')
+      .map((r) => r.toRoomInfo());
   }
 
   private getPlayerRoom(socketId: string): Room | undefined {

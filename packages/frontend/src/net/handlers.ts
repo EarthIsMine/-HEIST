@@ -29,6 +29,11 @@ export function wireSocketHandlers(): void {
     useGameStore.getState().setGameResult(result);
   });
 
+  socket.on('game_aborted', (payload) => {
+    console.warn(`[HEIST] Game aborted: ${payload.reason}`);
+    useGameStore.getState().setAbortInfo(payload);
+  });
+
   socket.on('error', ({ code, message }) => {
     console.error(`[HEIST] Server error ${code}: ${message}`);
   });
