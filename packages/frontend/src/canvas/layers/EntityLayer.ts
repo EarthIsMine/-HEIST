@@ -5,41 +5,71 @@ import { spriteManager, type SpriteKey } from '../SpriteManager';
 const COP_COLOR = '#4a9eff';
 const THIEF_COLOR = '#ff4757';
 const SPRITE_SIZE = PLAYER_RADIUS * 3.5;
+const LERP_SPEED = 15; // higher = snappier interpolation
+
+interface LerpState {
+  x: number;
+  y: number;
+  targetX: number;
+  targetY: number;
+}
 
 export class EntityLayer {
-  private prevPositions: Map<string, { x: number; y: number }> = new Map();
+  private lerpStates: Map<string, LerpState> = new Map();
+  private lastFrameTime = 0;
 
   draw(ctx: CanvasRenderingContext2D, snapshot: StateSnapshot, localPlayerId: string | null): void {
+    const now = performance.now();
+    const dt = this.lastFrameTime ? (now - this.lastFrameTime) / 1000 : 0.016;
+    this.lastFrameTime = now;
+
     for (const player of snapshot.players) {
+      this.updateLerp(player, dt);
       this.drawPlayer(ctx, player, player.id === localPlayerId);
     }
   }
 
-  private isMoving(player: Player): boolean {
-    const prev = this.prevPositions.get(player.id);
-    const moving =
-      prev !== undefined &&
-      (Math.abs(player.position.x - prev.x) > 0.5 ||
-        Math.abs(player.position.y - prev.y) > 0.5);
-    this.prevPositions.set(player.id, { x: player.position.x, y: player.position.y });
-    return moving;
+  private updateLerp(player: Player, dt: number): void {
+    const state = this.lerpStates.get(player.id);
+    if (!state) {
+      this.lerpStates.set(player.id, {
+        x: player.position.x,
+        y: player.position.y,
+        targetX: player.position.x,
+        targetY: player.position.y,
+      });
+      return;
+    }
+
+    state.targetX = player.position.x;
+    state.targetY = player.position.y;
+
+    const t = Math.min(1, LERP_SPEED * dt);
+    state.x += (state.targetX - state.x) * t;
+    state.y += (state.targetY - state.y) * t;
   }
 
-  private getSpriteKey(player: Player, moving: boolean): SpriteKey {
+  private isMoving(id: string): boolean {
+    const state = this.lerpStates.get(id);
+    if (!state) return false;
+    return Math.abs(state.targetX - state.x) > 0.5 || Math.abs(state.targetY - state.y) > 0.5;
+  }
+
+  private getSpriteKey(player: Player): SpriteKey {
     if (player.team === 'thief') {
       if (player.channeling === 'steal') return 'thief_drain';
-      if (moving) return 'thief_move';
       return 'thief_active';
     } else {
-      if (moving) return 'cop_move';
       return 'cop_active';
     }
   }
 
   private drawPlayer(ctx: CanvasRenderingContext2D, player: Player, isLocal: boolean): void {
-    const { x, y } = player.position;
+    const state = this.lerpStates.get(player.id);
+    const x = state ? state.x : player.position.x;
+    const y = state ? state.y : player.position.y;
     const isCop = player.team === 'cop';
-    const moving = this.isMoving(player);
+    const moving = this.isMoving(player.id);
 
     ctx.save();
 
@@ -54,7 +84,7 @@ export class EntityLayer {
     const bounce = moving ? Math.sin(Date.now() / 100) * 4 : 0;
     const facingLeft = player.velocity.x < -0.1;
 
-    const spriteKey = this.getSpriteKey(player, moving);
+    const spriteKey = this.getSpriteKey(player);
     const sprite = spriteManager.get(spriteKey);
 
     if (sprite) {

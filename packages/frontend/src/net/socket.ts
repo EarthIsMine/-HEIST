@@ -7,7 +7,7 @@ let socket: TypedSocket | null = null;
 
 export function getSocket(): TypedSocket {
   if (!socket) {
-    const url = import.meta.env.VITE_SERVER_URL || 'http://localhost:8032';
+    const url = import.meta.env.VITE_SERVER_URL || window.location.origin;
     socket = io(url, {
       autoConnect: false,
       transports: ['websocket', 'polling'],

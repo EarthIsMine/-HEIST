@@ -10,10 +10,12 @@ export default defineConfig({
     },
   },
   server: {
-    port: 3185,
+    host: true,
+    port: 3000,
+    allowedHosts: ['yt4307.mooo.com'],
     proxy: {
       '/socket.io': {
-        target: 'http://localhost:8032',
+        target: 'http://localhost:8080',
         ws: true,
       },
     },

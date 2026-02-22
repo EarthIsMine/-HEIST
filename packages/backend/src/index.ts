@@ -3,7 +3,7 @@ import { createApp } from './server.js';
 import { RoomManager } from './rooms/RoomManager.js';
 import { log } from './utils/logger.js';
 
-const PORT = parseInt(process.env.PORT || '8032', 10);
+const PORT = parseInt(process.env.PORT || '8080', 10);
 const MIN_PLAYERS = parseInt(process.env.MIN_PLAYERS || '1', 10);
 
 const { httpServer, io } = createApp();
