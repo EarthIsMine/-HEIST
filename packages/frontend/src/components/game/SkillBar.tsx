@@ -98,7 +98,7 @@ export function SkillBar() {
             }
           }}
         >
-          Steal
+          Steal [Space]
         </SkillButton>
         <SkillButton
           $enabled={canBreakJail}
@@ -109,7 +109,7 @@ export function SkillBar() {
             }
           }}
         >
-          Break Jail
+          Break Jail [Space]
         </SkillButton>
         {me.channeling && (
           <SkillButton
@@ -139,7 +139,7 @@ export function SkillBar() {
             }
           }}
         >
-          Arrest (need 2 cops)
+          Arrest [Space]
         </SkillButton>
       </BarContainer>
     );
