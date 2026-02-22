@@ -1,0 +1,91 @@
+import type { Player, Storage, Jail, StateSnapshot, Phase, Team, Vec2 } from '@heist/shared';
+import {
+  MAP_WIDTH,
+  MAP_HEIGHT,
+  PLAYER_RADIUS,
+  TOTAL_COINS,
+} from '@heist/shared';
+import { createStorages, COP_SPAWNS, THIEF_SPAWNS, JAIL_CONFIG } from '@heist/shared';
+
+export interface PlayerInit {
+  id: string;
+  walletAddress: string;
+  name: string;
+  team: Team;
+}
+
+export class GameState {
+  tick: number = 0;
+  phase: Phase = 'lobby';
+  matchTimerMs: number = 0;
+  headStartTimerMs: number = 0;
+
+  players: Map<string, Player> = new Map();
+  storages: Storage[];
+  jail: Jail;
+  stolenCoins: number = 0;
+
+  constructor(playerInits: PlayerInit[]) {
+    this.storages = createStorages();
+    this.jail = { ...JAIL_CONFIG, inmates: [] };
+
+    let copIndex = 0;
+    let thiefIndex = 0;
+
+    for (const init of playerInits) {
+      const spawnPos =
+        init.team === 'cop'
+          ? COP_SPAWNS[copIndex++ % COP_SPAWNS.length]
+          : THIEF_SPAWNS[thiefIndex++ % THIEF_SPAWNS.length];
+
+      this.players.set(init.id, {
+        id: init.id,
+        walletAddress: init.walletAddress,
+        name: init.name,
+        team: init.team,
+        position: { ...spawnPos },
+        velocity: { x: 0, y: 0 },
+        isJailed: false,
+        isStunned: false,
+        stunUntil: 0,
+        channeling: null,
+        channelingStart: 0,
+        channelingTarget: null,
+        connected: true,
+      });
+    }
+  }
+
+  setPlayerDirection(playerId: string, direction: Vec2): void {
+    const player = this.players.get(playerId);
+    if (!player) return;
+    player.velocity = direction;
+  }
+
+  unfreezeCops(): void {
+    // Cops can now move (head start ended)
+    // Nothing special needed - during head_start, physics skips cops
+  }
+
+  getThieves(): Player[] {
+    return [...this.players.values()].filter((p) => p.team === 'thief');
+  }
+
+  getCops(): Player[] {
+    return [...this.players.values()].filter((p) => p.team === 'cop');
+  }
+
+  toSnapshot(): StateSnapshot {
+    return {
+      tick: this.tick,
+      phase: this.phase,
+      matchTimerMs: this.matchTimerMs,
+      headStartTimerMs: this.headStartTimerMs,
+      players: [...this.players.values()],
+      storages: this.storages,
+      jail: this.jail,
+      stolenCoins: this.stolenCoins,
+      totalCoins: TOTAL_COINS,
+    };
+  }
+}
