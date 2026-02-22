@@ -14,7 +14,7 @@ export const BREAK_JAIL_RANGE = 110;
 export const BREAK_JAIL_CHANNEL_MS = 6_000;
 export const ARREST_RANGE = 75;
 export const ARREST_COP_COUNT = 1;
-export const ARREST_STUN_MS = 5_000;
+export const ARREST_STUN_MS = 2_000;
 
 export const TOTAL_COINS = 300;
 export const STORAGES_COUNT = 6;

@@ -10,10 +10,10 @@ export default defineConfig({
     },
   },
   server: {
-    port: 5173,
+    port: 3185,
     proxy: {
       '/socket.io': {
-        target: 'http://localhost:3001',
+        target: 'http://localhost:8032',
         ws: true,
       },
     },
