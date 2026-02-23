@@ -4,6 +4,24 @@ import { MAP_WIDTH, MAP_HEIGHT } from '@heist/shared';
 const GRID_SIZE = 100;
 
 export class MapLayer {
+  private jailImg: HTMLImageElement;
+  private jailImgLoaded = false;
+  private storageImg: HTMLImageElement;
+  private storageImgLoaded = false;
+
+  constructor() {
+    this.jailImg = new Image();
+    this.jailImg.src = '/sprites/jail.png';
+    this.jailImg.onload = () => {
+      this.jailImgLoaded = true;
+    };
+    this.storageImg = new Image();
+    this.storageImg.src = '/sprites/storage.png';
+    this.storageImg.onload = () => {
+      this.storageImgLoaded = true;
+    };
+  }
+
   draw(ctx: CanvasRenderingContext2D, snapshot: StateSnapshot): void {
     // Background
     ctx.fillStyle = '#1a2332';
@@ -43,27 +61,17 @@ export class MapLayer {
     for (const storage of snapshot.storages) {
       const ratio = storage.remainingCoins / storage.totalCoins;
 
-      ctx.beginPath();
-      ctx.arc(storage.position.x, storage.position.y, storage.radius, 0, Math.PI * 2);
-      ctx.fillStyle = ratio > 0 ? 'rgba(255, 215, 0, 0.15)' : 'rgba(100, 100, 100, 0.1)';
-      ctx.fill();
-      ctx.strokeStyle = ratio > 0 ? '#ffd700' : '#555';
-      ctx.lineWidth = 3;
-      ctx.stroke();
-
-      if (ratio > 0) {
-        ctx.beginPath();
-        ctx.moveTo(storage.position.x, storage.position.y);
-        ctx.arc(
-          storage.position.x,
-          storage.position.y,
-          storage.radius - 6,
-          -Math.PI / 2,
-          -Math.PI / 2 + ratio * Math.PI * 2,
+      if (this.storageImgLoaded) {
+        const size = storage.radius * 3.5;
+        if (ratio <= 0) ctx.globalAlpha = 0.3;
+        ctx.drawImage(
+          this.storageImg,
+          storage.position.x - size / 2,
+          storage.position.y - size / 2,
+          size,
+          size,
         );
-        ctx.closePath();
-        ctx.fillStyle = 'rgba(255, 215, 0, 0.3)';
-        ctx.fill();
+        ctx.globalAlpha = 1;
       }
 
       ctx.fillStyle = ratio > 0 ? '#ffd700' : '#555';
@@ -79,25 +87,22 @@ export class MapLayer {
 
     // Jail
     const jail = snapshot.jail;
-    ctx.beginPath();
-    ctx.arc(jail.position.x, jail.position.y, jail.radius, 0, Math.PI * 2);
-    ctx.fillStyle = 'rgba(136, 136, 136, 0.1)';
-    ctx.fill();
-    ctx.setLineDash([10, 6]);
-    ctx.strokeStyle = '#888';
-    ctx.lineWidth = 3;
-    ctx.stroke();
-    ctx.setLineDash([]);
-
-    ctx.fillStyle = '#888';
-    ctx.font = 'bold 18px system-ui';
-    ctx.textAlign = 'center';
-    ctx.textBaseline = 'middle';
-    ctx.fillText('JAIL', jail.position.x, jail.position.y - jail.radius - 14);
+    if (this.jailImgLoaded) {
+      const size = jail.radius * 2;
+      ctx.drawImage(
+        this.jailImg,
+        jail.position.x - jail.radius,
+        jail.position.y - jail.radius,
+        size,
+        size,
+      );
+    }
 
     if (jail.inmates.length > 0) {
       ctx.fillStyle = '#ff4757';
       ctx.font = 'bold 16px system-ui';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
       ctx.fillText(
         `${jail.inmates.length} imprisoned`,
         jail.position.x,

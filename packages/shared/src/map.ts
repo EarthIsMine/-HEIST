@@ -34,7 +34,7 @@ export const THIEF_SPAWNS: Vec2[] = [
 
 export const JAIL_CONFIG: Jail = {
   position: { x: 1200, y: 1200 },
-  radius: 100,
+  radius: 250,
   inmates: [],
 };
 
@@ -75,36 +75,4 @@ export const OBSTACLES: Obstacle[] = [
   { id: 'r5_r', position: { x: 320, y: 1100 }, width: 20, height: 200 },
   { id: 'r5_b', position: { x: 140, y: 1280 }, width: 200, height: 20 },
 
-  // ============================================================
-  // Mid-map hideout rooms: smaller U-shapes for ambush & escape
-  // Interior ~120x120
-  // ============================================================
-
-  // Hideout NW (700,700) - open RIGHT (toward center)
-  { id: 'h0_t', position: { x: 620, y: 620 }, width: 160, height: 20 },
-  { id: 'h0_l', position: { x: 620, y: 620 }, width: 20, height: 160 },
-  { id: 'h0_b', position: { x: 620, y: 760 }, width: 160, height: 20 },
-
-  // Hideout NE (1700,700) - open LEFT
-  { id: 'h1_t', position: { x: 1620, y: 620 }, width: 160, height: 20 },
-  { id: 'h1_r', position: { x: 1760, y: 620 }, width: 20, height: 160 },
-  { id: 'h1_b', position: { x: 1620, y: 760 }, width: 160, height: 20 },
-
-  // Hideout SW (700,1700) - open RIGHT
-  { id: 'h2_t', position: { x: 620, y: 1620 }, width: 160, height: 20 },
-  { id: 'h2_l', position: { x: 620, y: 1620 }, width: 20, height: 160 },
-  { id: 'h2_b', position: { x: 620, y: 1760 }, width: 160, height: 20 },
-
-  // Hideout SE (1700,1700) - open LEFT
-  { id: 'h3_t', position: { x: 1620, y: 1620 }, width: 160, height: 20 },
-  { id: 'h3_r', position: { x: 1760, y: 1620 }, width: 20, height: 160 },
-  { id: 'h3_b', position: { x: 1620, y: 1760 }, width: 160, height: 20 },
-
-  // ============================================================
-  // Jail area: 4 pillars for partial LOS cover near jail
-  // ============================================================
-  { id: 'jp_0', position: { x: 1040, y: 1040 }, width: 50, height: 50 },
-  { id: 'jp_1', position: { x: 1310, y: 1040 }, width: 50, height: 50 },
-  { id: 'jp_2', position: { x: 1040, y: 1310 }, width: 50, height: 50 },
-  { id: 'jp_3', position: { x: 1310, y: 1310 }, width: 50, height: 50 },
 ];
