@@ -1,13 +1,13 @@
 import type { StateSnapshot } from '@heist/shared';
 import { MAP_WIDTH, MAP_HEIGHT } from '@heist/shared';
 
-const GRID_SIZE = 100;
-
 export class MapLayer {
   private jailImg: HTMLImageElement;
   private jailImgLoaded = false;
   private storageImg: HTMLImageElement;
   private storageImgLoaded = false;
+  private mapImg: HTMLImageElement;
+  private mapImgLoaded = false;
 
   constructor() {
     this.jailImg = new Image();
@@ -20,6 +20,11 @@ export class MapLayer {
     this.storageImg.onload = () => {
       this.storageImgLoaded = true;
     };
+    this.mapImg = new Image();
+    this.mapImg.src = '/sprites/map.png';
+    this.mapImg.onload = () => {
+      this.mapImgLoaded = true;
+    };
   }
 
   draw(ctx: CanvasRenderingContext2D, snapshot: StateSnapshot): void {
@@ -27,26 +32,12 @@ export class MapLayer {
     ctx.fillStyle = '#1a2332';
     ctx.fillRect(0, 0, MAP_WIDTH, MAP_HEIGHT);
 
-    // Grid lines
-    ctx.strokeStyle = '#222d3d';
-    ctx.lineWidth = 0.5;
-    for (let x = 0; x <= MAP_WIDTH; x += GRID_SIZE) {
-      ctx.beginPath();
-      ctx.moveTo(x, 0);
-      ctx.lineTo(x, MAP_HEIGHT);
-      ctx.stroke();
+    if (this.mapImgLoaded) {
+      const scale = 2.0;
+      const drawSize = MAP_WIDTH * scale;
+      const offset = (MAP_WIDTH - drawSize) / 2;
+      ctx.drawImage(this.mapImg, offset, offset, drawSize, drawSize);
     }
-    for (let y = 0; y <= MAP_HEIGHT; y += GRID_SIZE) {
-      ctx.beginPath();
-      ctx.moveTo(0, y);
-      ctx.lineTo(MAP_WIDTH, y);
-      ctx.stroke();
-    }
-
-    // Map border
-    ctx.strokeStyle = '#3a4a5a';
-    ctx.lineWidth = 4;
-    ctx.strokeRect(0, 0, MAP_WIDTH, MAP_HEIGHT);
 
     // Obstacles
     for (const obs of snapshot.obstacles) {
