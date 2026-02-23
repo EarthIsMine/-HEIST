@@ -5,15 +5,18 @@ import {
   HEAD_START_MS,
   TOTAL_COINS,
 } from '@heist/shared';
-import { OBSTACLES } from '@heist/shared';
 import { GameState, type PlayerInit } from './GameState.js';
 import { updatePlayerMovement, resolveObstacleCollision } from './physics.js';
 import {
   tryStartSteal,
   tryStartBreakJail,
   tryArrest,
+  tryDisguise,
+  tryBuildWall,
   updateChanneling,
   updateStuns,
+  updateDisguises,
+  updateDynamicObstacles,
   cancelPlayerSkill,
   type SkillEvent,
 } from './skills.js';
@@ -67,10 +70,23 @@ export class GameLoop {
       // Update stuns
       updateStuns(this.state, now);
 
+      // Update disguises
+      const disguiseEvents = updateDisguises(this.state, now);
+      for (const event of disguiseEvents) {
+        this.onSkillEvent?.(event);
+      }
+
+      // Update dynamic obstacles (remove expired walls)
+      const wallEvents = updateDynamicObstacles(this.state, now);
+      for (const event of wallEvents) {
+        this.onSkillEvent?.(event);
+      }
+
       // Update movement + obstacle collision
+      const allObstacles = this.state.getAllObstacles();
       for (const [, player] of this.state.players) {
         updatePlayerMovement(player, dt, this.state.phase);
-        resolveObstacleCollision(player, OBSTACLES);
+        resolveObstacleCollision(player, allObstacles);
       }
 
       // Update bot AI
@@ -137,6 +153,16 @@ export class GameLoop {
       case 'arrest': {
         if (!targetId) return;
         events = tryArrest(this.state, playerId, targetId);
+        break;
+      }
+      case 'disguise': {
+        const event = tryDisguise(this.state, playerId, Date.now());
+        if (event) events = [event];
+        break;
+      }
+      case 'build_wall': {
+        const event = tryBuildWall(this.state, playerId, Date.now());
+        if (event) events = [event];
         break;
       }
     }

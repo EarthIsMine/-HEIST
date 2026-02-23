@@ -84,11 +84,14 @@ export class RoomManager {
     }
   }
 
-  handleSelectTeam(socket: TypedSocket, team: Team): void {
+  handleSelectTeam(socket: TypedSocket, team: Team): { ok: boolean; error?: string } {
     const room = this.getPlayerRoom(socket.id);
-    if (!room) return;
-    room.selectTeam(socket.id, team);
-    log('RoomManager', `Player ${socket.id} selected team: ${team}`);
+    if (!room) return { ok: false, error: 'Not in a room' };
+    const result = room.selectTeam(socket.id, team);
+    if (result.ok) {
+      log('RoomManager', `Player ${socket.id} selected team: ${team}`);
+    }
+    return result;
   }
 
   handleReady(socket: TypedSocket): void {

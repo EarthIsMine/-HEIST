@@ -51,7 +51,9 @@ export class Room {
       walletAddress,
       ready: false,
       confirmed: ENTRY_FEE_LAMPORTS === 0,
+      selectedTeam: 'thief',
     });
+    this.teamPreference.set(socketId, 'thief');
     this.socketMap.set(socketId, walletAddress);
 
     this.broadcastRoomState();
@@ -113,9 +115,26 @@ export class Room {
     return true;
   }
 
-  selectTeam(socketId: string, team: Team): void {
+  selectTeam(socketId: string, team: Team): { ok: boolean; error?: string } {
+    const player = this.players.get(socketId);
+    if (!player) return { ok: false, error: 'Not in room' };
+
+    // Don't count the player's current selection (they're switching)
+    let teamCount = 0;
+    for (const [id, pref] of this.teamPreference) {
+      if (id !== socketId && pref === team) teamCount++;
+    }
+
+    const limit = team === 'cop' ? COP_COUNT : THIEF_COUNT;
+    if (teamCount >= limit) {
+      return { ok: false, error: `${team === 'cop' ? 'Police' : 'Thief'} team is full` };
+    }
+
     this.teamPreference.set(socketId, team);
+    player.selectedTeam = team;
+    this.broadcastRoomState();
     log('Room', `Player ${socketId} selected team: ${team}`);
+    return { ok: true };
   }
 
   setReady(socketId: string): void {
@@ -151,12 +170,27 @@ export class Room {
     log('Room', `Starting game in room ${this.id} with bots`);
 
     const teamAssignments = new Map<string, Team>();
-    for (const id of this.players.keys()) {
-      teamAssignments.set(id, this.teamPreference.get(id) || 'thief');
-    }
+    let copCount = 0;
+    let thiefCount = 0;
 
-    let copCount = [...teamAssignments.values()].filter((t) => t === 'cop').length;
-    let thiefCount = [...teamAssignments.values()].filter((t) => t === 'thief').length;
+    for (const id of this.players.keys()) {
+      const preferred = this.teamPreference.get(id) || 'thief';
+      let assigned: Team;
+
+      if (preferred === 'cop' && copCount < COP_COUNT) {
+        assigned = 'cop';
+      } else if (preferred === 'thief' && thiefCount < THIEF_COUNT) {
+        assigned = 'thief';
+      } else if (copCount < COP_COUNT) {
+        assigned = 'cop';
+      } else {
+        assigned = 'thief';
+      }
+
+      teamAssignments.set(id, assigned);
+      if (assigned === 'cop') copCount++;
+      else thiefCount++;
+    }
 
     const botIds: string[] = [];
     const playerInits: PlayerInit[] = [];
@@ -224,6 +258,14 @@ export class Room {
           this.io.to(this.id).emit('player_jailed', event.data.playerId as string);
         } else if (event.type === 'player_freed') {
           this.io.to(this.id).emit('player_freed', event.data.playerId as string);
+        } else if (event.type === 'player_disguised') {
+          this.io.to(this.id).emit('player_disguised', event.data.playerId as string);
+        } else if (event.type === 'disguise_revealed') {
+          this.io.to(this.id).emit('disguise_revealed', event.data.playerId as string);
+        } else if (event.type === 'wall_placed') {
+          this.io.to(this.id).emit('wall_placed', event.data.obstacleId as string);
+        } else if (event.type === 'wall_removed') {
+          this.io.to(this.id).emit('wall_removed', event.data.obstacleId as string);
         }
       },
       botIds,

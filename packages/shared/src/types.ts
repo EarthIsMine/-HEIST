@@ -2,7 +2,7 @@ export type PlayerId = string;
 export type RoomId = string;
 export type Team = 'cop' | 'thief';
 export type Phase = 'lobby' | 'head_start' | 'playing' | 'ended';
-export type SkillType = 'steal' | 'break_jail' | 'arrest';
+export type SkillType = 'steal' | 'break_jail' | 'arrest' | 'disguise' | 'build_wall';
 
 export interface Vec2 {
   x: number;
@@ -24,6 +24,10 @@ export interface Player {
   channelingStart: number;
   channelingTarget: string | null;
   connected: boolean;
+  isDisguised: boolean;
+  disguiseUntil: number;
+  disguiseCooldownUntil: number;
+  wallCooldownUntil: number;
 }
 
 export interface Obstacle {
@@ -31,6 +35,8 @@ export interface Obstacle {
   position: Vec2;
   width: number;
   height: number;
+  expiresAt?: number;
+  ownerId?: string;
 }
 
 export interface Storage {
@@ -53,6 +59,7 @@ export interface RoomPlayer {
   walletAddress: string;
   ready: boolean;
   confirmed: boolean;
+  selectedTeam: Team;
 }
 
 export interface RoomInfo {

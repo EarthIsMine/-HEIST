@@ -24,7 +24,10 @@ export interface ClientToServerEvents {
     ack: (result: { ok: boolean; error?: string }) => void,
   ) => void;
 
-  select_team: (team: Team) => void;
+  select_team: (
+    team: Team,
+    ack: (result: { ok: boolean; error?: string }) => void,
+  ) => void;
 
   ready: () => void;
 
@@ -33,6 +36,8 @@ export interface ClientToServerEvents {
   request_steal: (storageId: string) => void;
   request_break_jail: () => void;
   request_arrest: (targetId: PlayerId) => void;
+  request_disguise: () => void;
+  request_build_wall: () => void;
   cancel_skill: () => void;
 }
 
@@ -59,6 +64,10 @@ export interface ServerToClientEvents {
 
   player_jailed: (playerId: PlayerId) => void;
   player_freed: (playerId: PlayerId) => void;
+  player_disguised: (playerId: PlayerId) => void;
+  disguise_revealed: (playerId: PlayerId) => void;
+  wall_placed: (obstacleId: string) => void;
+  wall_removed: (obstacleId: string) => void;
   storage_emptied: (storageId: string) => void;
   cops_stunned: (copIds: PlayerId[]) => void;
 

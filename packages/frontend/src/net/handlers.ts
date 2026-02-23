@@ -33,6 +33,20 @@ export function wireSocketHandlers(): void {
     useGameStore.getState().showFloatingMessage('ARREST SUCCESS!');
   });
 
+  socket.on('player_disguised', (playerId) => {
+    const store = useGameStore.getState();
+    if (playerId === store.localPlayerId) {
+      store.showFloatingMessage('DISGUISED!');
+    }
+  });
+
+  socket.on('disguise_revealed', (playerId) => {
+    const store = useGameStore.getState();
+    if (playerId === store.localPlayerId) {
+      store.showFloatingMessage('DISGUISE REVEALED!');
+    }
+  });
+
   socket.on('game_aborted', (payload) => {
     console.warn(`[HEIST] Game aborted: ${payload.reason}`);
     useGameStore.getState().setAbortInfo(payload);

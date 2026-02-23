@@ -1,5 +1,5 @@
 import type { StateSnapshot } from '@heist/shared';
-import { MAP_WIDTH, MAP_HEIGHT } from '@heist/shared';
+import { MAP_WIDTH, MAP_HEIGHT, WALL_DURATION_MS } from '@heist/shared';
 
 export class MapLayer {
   private jailImg: HTMLImageElement;
@@ -41,11 +41,24 @@ export class MapLayer {
 
     // Obstacles
     for (const obs of snapshot.obstacles) {
-      ctx.fillStyle = '#2a3a4a';
-      ctx.fillRect(obs.position.x, obs.position.y, obs.width, obs.height);
-      ctx.strokeStyle = '#3d5060';
-      ctx.lineWidth = 2;
-      ctx.strokeRect(obs.position.x, obs.position.y, obs.width, obs.height);
+      if (obs.expiresAt) {
+        // Dynamic wall - orange with fade
+        const remaining = obs.expiresAt - Date.now();
+        const ratio = Math.max(0, remaining / WALL_DURATION_MS);
+        ctx.globalAlpha = 0.4 + ratio * 0.6;
+        ctx.fillStyle = '#6b7b8d';
+        ctx.fillRect(obs.position.x, obs.position.y, obs.width, obs.height);
+        ctx.strokeStyle = '#8899aa';
+        ctx.lineWidth = 2;
+        ctx.strokeRect(obs.position.x, obs.position.y, obs.width, obs.height);
+        ctx.globalAlpha = 1;
+      } else {
+        ctx.fillStyle = '#2a3a4a';
+        ctx.fillRect(obs.position.x, obs.position.y, obs.width, obs.height);
+        ctx.strokeStyle = '#3d5060';
+        ctx.lineWidth = 2;
+        ctx.strokeRect(obs.position.x, obs.position.y, obs.width, obs.height);
+      }
     }
 
     // Storages

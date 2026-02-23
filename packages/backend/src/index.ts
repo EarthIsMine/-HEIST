@@ -24,8 +24,9 @@ io.on('connection', (socket) => {
     roomManager.handleConfirmEntry(socket, txSignature, ack);
   });
 
-  socket.on('select_team', (team) => {
-    roomManager.handleSelectTeam(socket, team);
+  socket.on('select_team', (team, ack) => {
+    const result = roomManager.handleSelectTeam(socket, team);
+    ack(result);
   });
 
   socket.on('ready', () => {
@@ -46,6 +47,14 @@ io.on('connection', (socket) => {
 
   socket.on('request_arrest', (targetId) => {
     roomManager.handleRequestSkill(socket, 'arrest', targetId);
+  });
+
+  socket.on('request_disguise', () => {
+    roomManager.handleRequestSkill(socket, 'disguise');
+  });
+
+  socket.on('request_build_wall', () => {
+    roomManager.handleRequestSkill(socket, 'build_wall');
   });
 
   socket.on('cancel_skill', () => {

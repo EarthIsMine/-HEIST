@@ -57,6 +57,7 @@ export class EntityLayer {
 
   private getSpriteKey(player: Player): SpriteKey {
     if (player.team === 'thief') {
+      if (player.isDisguised) return 'cop_active';
       if (player.channeling === 'steal') return 'thief_drain';
       return 'thief_active';
     } else {
@@ -134,6 +135,20 @@ export class EntityLayer {
       const starBounce = Math.sin(Date.now() / 200) * 5;
       ctx.fillText('*', x - 14, y - SPRITE_SIZE / 2 - 4 + starBounce);
       ctx.fillText('*', x + 14, y - SPRITE_SIZE / 2 - 4 - starBounce);
+    }
+
+    // Disguise indicator for teammates
+    if (player.isDisguised) {
+      const shimmer = 0.5 + Math.sin(Date.now() / 300) * 0.3;
+      ctx.globalAlpha = shimmer;
+      ctx.strokeStyle = '#9b59b6';
+      ctx.lineWidth = 3;
+      ctx.setLineDash([4, 4]);
+      ctx.beginPath();
+      ctx.arc(x, y, PLAYER_RADIUS + 8, 0, Math.PI * 2);
+      ctx.stroke();
+      ctx.setLineDash([]);
+      ctx.globalAlpha = 1;
     }
 
     ctx.restore();

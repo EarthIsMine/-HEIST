@@ -5,6 +5,7 @@ import {
   STEAL_RANGE,
   ARREST_RANGE,
   BREAK_JAIL_RANGE,
+  WALL_COST_COINS,
 } from '@heist/shared';
 import type { Player, Storage } from '@heist/shared';
 
@@ -86,6 +87,8 @@ export function SkillBar() {
     const nearJail =
       dist(me.position, snapshot.jail.position) <= BREAK_JAIL_RANGE + snapshot.jail.radius;
     const canBreakJail = nearJail && snapshot.jail.inmates.length > 0 && !me.channeling;
+    const canDisguise = !me.channeling && !me.isDisguised;
+    const canBuildWall = !me.channeling && snapshot.stolenCoins >= WALL_COST_COINS;
 
     return (
       <BarContainer>
@@ -110,6 +113,28 @@ export function SkillBar() {
           }}
         >
           Break Jail [Space]
+        </SkillButton>
+        <SkillButton
+          $enabled={canDisguise}
+          $color="#9b59b6"
+          onClick={() => {
+            if (canDisguise) {
+              socket.emit('request_disguise');
+            }
+          }}
+        >
+          Disguise [Q]{me.isDisguised ? ' (ON)' : ''}
+        </SkillButton>
+        <SkillButton
+          $enabled={canBuildWall}
+          $color="#e67e22"
+          onClick={() => {
+            if (canBuildWall) {
+              socket.emit('request_build_wall');
+            }
+          }}
+        >
+          Wall [E] ({WALL_COST_COINS}c)
         </SkillButton>
         {me.channeling && (
           <SkillButton

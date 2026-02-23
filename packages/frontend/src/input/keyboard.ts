@@ -60,15 +60,31 @@ function handleSpaceSkill(): void {
   }
 }
 
+function handleDisguise(): void {
+  const { snapshot, localPlayerId, myTeam } = useGameStore.getState();
+  if (!snapshot || !localPlayerId || myTeam !== 'thief') return;
+  const me = snapshot.players.find((p) => p.id === localPlayerId);
+  if (!me || me.isJailed || me.isStunned || me.channeling || me.isDisguised) return;
+  getSocket().emit('request_disguise');
+}
+
+function handleBuildWall(): void {
+  const { snapshot, localPlayerId, myTeam } = useGameStore.getState();
+  if (!snapshot || !localPlayerId || myTeam !== 'thief') return;
+  const me = snapshot.players.find((p) => p.id === localPlayerId);
+  if (!me || me.isJailed || me.isStunned || me.channeling) return;
+  getSocket().emit('request_build_wall');
+}
+
 function startInputLoop(): void {
   if (inputInterval) return;
   inputInterval = window.setInterval(() => {
     let x = 0;
     let y = 0;
-    if (keys.has('w') || keys.has('arrowup')) y = -1;
-    if (keys.has('s') || keys.has('arrowdown')) y = 1;
-    if (keys.has('a') || keys.has('arrowleft')) x = -1;
-    if (keys.has('d') || keys.has('arrowright')) x = 1;
+    if (keys.has('KeyW') || keys.has('ArrowUp')) y = -1;
+    if (keys.has('KeyS') || keys.has('ArrowDown')) y = 1;
+    if (keys.has('KeyA') || keys.has('ArrowLeft')) x = -1;
+    if (keys.has('KeyD') || keys.has('ArrowRight')) x = 1;
 
     getSocket().emit('input_move', { x, y });
   }, TICK_MS);
@@ -83,25 +99,35 @@ function stopInputLoop(): void {
 }
 
 export function initKeyboard(): () => void {
-  const moveKeys = ['w', 'a', 's', 'd', 'arrowup', 'arrowdown', 'arrowleft', 'arrowright'];
+  const moveKeyCodes = ['KeyW', 'KeyA', 'KeyS', 'KeyD', 'ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'];
 
   const onDown = (e: KeyboardEvent) => {
-    const key = e.key.toLowerCase();
-    if (key === ' ') {
+    const code = e.code;
+    if (code === 'Space') {
       e.preventDefault();
       handleSpaceSkill();
       return;
     }
-    if (moveKeys.includes(key)) {
+    if (code === 'KeyQ') {
       e.preventDefault();
-      keys.add(key);
+      handleDisguise();
+      return;
+    }
+    if (code === 'KeyE') {
+      e.preventDefault();
+      handleBuildWall();
+      return;
+    }
+    if (moveKeyCodes.includes(code)) {
+      e.preventDefault();
+      keys.add(code);
       startInputLoop();
     }
   };
 
   const onUp = (e: KeyboardEvent) => {
-    const key = e.key.toLowerCase();
-    keys.delete(key);
+    const code = e.code;
+    keys.delete(code);
     if (keys.size === 0) stopInputLoop();
   };
 

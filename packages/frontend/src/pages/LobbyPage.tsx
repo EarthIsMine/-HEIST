@@ -8,7 +8,7 @@ import { useLobbyStore } from '../stores/useLobbyStore';
 import { useGameStore } from '../stores/useGameStore';
 import { getSocket } from '../net/socket';
 import { buildEntryFeeTx } from '../solana/entryFee';
-import { ENTRY_FEE_LAMPORTS } from '@heist/shared';
+import { ENTRY_FEE_LAMPORTS, COP_COUNT, THIEF_COUNT } from '@heist/shared';
 import type { Team, RoomInfo } from '@heist/shared';
 
 const Container = styled.div`
@@ -87,21 +87,51 @@ const Button = styled.button<{ $variant?: string }>`
   margin-right: 8px;
 `;
 
+const TeamColumns = styled.div`
+  display: flex;
+  gap: 16px;
+  margin-top: 12px;
+`;
+
+const TeamColumn = styled.div<{ $team: string }>`
+  flex: 1;
+  border: 1px solid ${(p) => (p.$team === 'cop' ? 'rgba(74, 158, 255, 0.3)' : 'rgba(255, 71, 87, 0.3)')};
+  border-radius: 8px;
+  padding: 12px;
+  background: ${(p) => (p.$team === 'cop' ? 'rgba(74, 158, 255, 0.05)' : 'rgba(255, 71, 87, 0.05)')};
+`;
+
+const TeamColumnTitle = styled.div<{ $team: string }>`
+  font-size: 13px;
+  font-weight: 700;
+  color: ${(p) => (p.$team === 'cop' ? '#4a9eff' : '#ff4757')};
+  margin-bottom: 8px;
+  text-align: center;
+`;
+
 const PlayerList = styled.div`
   display: flex;
   flex-direction: column;
-  gap: 8px;
-  margin-top: 12px;
+  gap: 6px;
 `;
 
 const PlayerRow = styled.div`
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 8px 12px;
+  padding: 6px 10px;
   background: #0a0e17;
   border-radius: 6px;
-  font-size: 14px;
+  font-size: 13px;
+`;
+
+const EmptySlot = styled.div`
+  padding: 6px 10px;
+  border-radius: 6px;
+  border: 1px dashed #1e2a3a;
+  color: #555;
+  font-size: 12px;
+  text-align: center;
 `;
 
 const Badge = styled.span<{ $color: string }>`
@@ -174,26 +204,34 @@ const TeamSelector = styled.div`
   margin-bottom: 16px;
 `;
 
-const TeamButton = styled.button<{ $active: boolean; $team: string }>`
+const TeamButton = styled.button<{ $active: boolean; $team: string; $disabled?: boolean }>`
   flex: 1;
   padding: 16px;
   border-radius: 10px;
   font-weight: 700;
   font-size: 16px;
   border: 3px solid ${(p) =>
-    p.$active
-      ? p.$team === 'cop' ? '#4a9eff' : '#ff4757'
-      : '#1e2a3a'};
+    p.$disabled
+      ? '#1e2a3a'
+      : p.$active
+        ? p.$team === 'cop' ? '#4a9eff' : '#ff4757'
+        : '#1e2a3a'};
   background: ${(p) =>
-    p.$active
-      ? p.$team === 'cop' ? 'rgba(74, 158, 255, 0.15)' : 'rgba(255, 71, 87, 0.15)'
-      : '#0a0e17'};
+    p.$disabled
+      ? '#0a0e17'
+      : p.$active
+        ? p.$team === 'cop' ? 'rgba(74, 158, 255, 0.15)' : 'rgba(255, 71, 87, 0.15)'
+        : '#0a0e17'};
   color: ${(p) =>
-    p.$team === 'cop' ? '#4a9eff' : '#ff4757'};
+    p.$disabled
+      ? '#555'
+      : p.$team === 'cop' ? '#4a9eff' : '#ff4757'};
+  opacity: ${(p) => (p.$disabled ? 0.5 : 1)};
+  cursor: ${(p) => (p.$disabled ? 'not-allowed' : 'pointer')};
   transition: all 0.15s;
 
   &:hover {
-    border-color: ${(p) => p.$team === 'cop' ? '#4a9eff' : '#ff4757'};
+    border-color: ${(p) => p.$disabled ? '#1e2a3a' : p.$team === 'cop' ? '#4a9eff' : '#ff4757'};
   }
 `;
 
@@ -307,8 +345,11 @@ export function LobbyPage() {
   }, [publicKey, sendTransaction, connection, setEntryPaid]);
 
   const handleSelectTeam = useCallback((team: Team) => {
-    setSelectedTeam(team);
-    getSocket().emit('select_team', team);
+    getSocket().emit('select_team', team, (result) => {
+      if (result.ok) {
+        setSelectedTeam(team);
+      }
+    });
   }, []);
 
   const handleReady = useCallback(() => {
@@ -390,37 +431,70 @@ export function LobbyPage() {
                 {currentRoom.name} ({currentRoom.players.length}/{currentRoom.maxPlayers})
               </SectionTitle>
 
-              <PlayerList>
-                {currentRoom.players.map((p) => (
-                  <PlayerRow key={p.id}>
-                    <span>{p.name}</span>
-                    <div>
-                      {p.confirmed && <Badge $color="#2ed573">Paid</Badge>}{' '}
-                      {p.ready && <Badge $color="#00d4ff">Ready</Badge>}
-                    </div>
-                  </PlayerRow>
-                ))}
-              </PlayerList>
+              <TeamColumns>
+                <TeamColumn $team="cop">
+                  <TeamColumnTitle $team="cop">POLICE ({currentRoom.players.filter((p) => p.selectedTeam === 'cop').length}/{COP_COUNT})</TeamColumnTitle>
+                  <PlayerList>
+                    {currentRoom.players.filter((p) => p.selectedTeam === 'cop').map((p) => (
+                      <PlayerRow key={p.id}>
+                        <span>{p.name}</span>
+                        <div>
+                          {p.ready && <Badge $color="#4a9eff">Ready</Badge>}
+                        </div>
+                      </PlayerRow>
+                    ))}
+                    {Array.from({ length: COP_COUNT - currentRoom.players.filter((p) => p.selectedTeam === 'cop').length }).map((_, i) => (
+                      <EmptySlot key={`cop-empty-${i}`}>BOT</EmptySlot>
+                    ))}
+                  </PlayerList>
+                </TeamColumn>
+                <TeamColumn $team="thief">
+                  <TeamColumnTitle $team="thief">THIEF ({currentRoom.players.filter((p) => p.selectedTeam === 'thief').length}/{THIEF_COUNT})</TeamColumnTitle>
+                  <PlayerList>
+                    {currentRoom.players.filter((p) => p.selectedTeam === 'thief').map((p) => (
+                      <PlayerRow key={p.id}>
+                        <span>{p.name}</span>
+                        <div>
+                          {p.ready && <Badge $color="#ff4757">Ready</Badge>}
+                        </div>
+                      </PlayerRow>
+                    ))}
+                    {Array.from({ length: THIEF_COUNT - currentRoom.players.filter((p) => p.selectedTeam === 'thief').length }).map((_, i) => (
+                      <EmptySlot key={`thief-empty-${i}`}>BOT</EmptySlot>
+                    ))}
+                  </PlayerList>
+                </TeamColumn>
+              </TeamColumns>
             </Section>
 
             <Section>
               <SectionTitle>Choose Your Team</SectionTitle>
-              <TeamSelector>
-                <TeamButton
-                  $active={selectedTeam === 'cop'}
-                  $team="cop"
-                  onClick={() => handleSelectTeam('cop')}
-                >
-                  POLICE
-                </TeamButton>
-                <TeamButton
-                  $active={selectedTeam === 'thief'}
-                  $team="thief"
-                  onClick={() => handleSelectTeam('thief')}
-                >
-                  THIEF
-                </TeamButton>
-              </TeamSelector>
+              {(() => {
+                const copCount = currentRoom.players.filter((p) => p.selectedTeam === 'cop').length;
+                const thiefCount = currentRoom.players.filter((p) => p.selectedTeam === 'thief').length;
+                const copFull = selectedTeam !== 'cop' && copCount >= COP_COUNT;
+                const thiefFull = selectedTeam !== 'thief' && thiefCount >= THIEF_COUNT;
+                return (
+                  <TeamSelector>
+                    <TeamButton
+                      $active={selectedTeam === 'cop'}
+                      $team="cop"
+                      $disabled={copFull}
+                      onClick={() => !copFull && handleSelectTeam('cop')}
+                    >
+                      POLICE ({copCount}/{COP_COUNT})
+                    </TeamButton>
+                    <TeamButton
+                      $active={selectedTeam === 'thief'}
+                      $team="thief"
+                      $disabled={thiefFull}
+                      onClick={() => !thiefFull && handleSelectTeam('thief')}
+                    >
+                      THIEF ({thiefCount}/{THIEF_COUNT})
+                    </TeamButton>
+                  </TeamSelector>
+                );
+              })()}
               <InfoText>Remaining slots will be filled with bots.</InfoText>
             </Section>
 

@@ -26,3 +26,15 @@ export const THIEF_COUNT = 4;
 export const STEAL_MOVE_SPEED_MULTIPLIER = 0.4;
 export const COP_VISION_RADIUS = 280;
 export const THIEF_VISION_RADIUS = 220;
+
+// Disguise skill
+export const DISGUISE_DURATION_MS = 10_000;
+export const DISGUISE_COOLDOWN_MS = 30_000;
+
+// Wall building skill
+export const WALL_COST_COINS = 10;
+export const WALL_DURATION_MS = 15_000;
+export const WALL_COOLDOWN_MS = 10_000;
+export const WALL_WIDTH = 120;
+export const WALL_HEIGHT = 20;
+export const WALL_PLACE_DISTANCE = 60;

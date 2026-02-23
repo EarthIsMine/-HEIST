@@ -1,4 +1,4 @@
-import type { Player, Storage, Jail, StateSnapshot, Phase, Team, Vec2 } from '@heist/shared';
+import type { Player, Storage, Jail, Obstacle, StateSnapshot, Phase, Team, Vec2 } from '@heist/shared';
 import {
   MAP_WIDTH,
   MAP_HEIGHT,
@@ -27,6 +27,7 @@ export class GameState {
   storages: Storage[];
   jail: Jail;
   stolenCoins: number = 0;
+  dynamicObstacles: Obstacle[] = [];
 
   constructor(playerInits: PlayerInit[]) {
     this.storages = createStorages();
@@ -56,8 +57,32 @@ export class GameState {
         channelingStart: 0,
         channelingTarget: null,
         connected: true,
+        isDisguised: false,
+        disguiseUntil: 0,
+        disguiseCooldownUntil: 0,
+        wallCooldownUntil: 0,
       });
     }
+  }
+
+  getAllObstacles(): Obstacle[] {
+    return [...OBSTACLES, ...this.dynamicObstacles];
+  }
+
+  addDynamicObstacle(obs: Obstacle): void {
+    this.dynamicObstacles.push(obs);
+  }
+
+  removeExpiredObstacles(now: number): Obstacle[] {
+    const removed: Obstacle[] = [];
+    this.dynamicObstacles = this.dynamicObstacles.filter((obs) => {
+      if (obs.expiresAt && now >= obs.expiresAt) {
+        removed.push(obs);
+        return false;
+      }
+      return true;
+    });
+    return removed;
   }
 
   setPlayerDirection(playerId: string, direction: Vec2): void {
@@ -88,7 +113,7 @@ export class GameState {
       players: [...this.players.values()],
       storages: this.storages,
       jail: this.jail,
-      obstacles: OBSTACLES,
+      obstacles: this.getAllObstacles(),
       stolenCoins: this.stolenCoins,
       totalCoins: TOTAL_COINS,
     };
@@ -98,6 +123,8 @@ export class GameState {
     const viewer = this.players.get(playerId);
     if (!viewer) return this.toSnapshot();
 
+    const allObstacles = this.getAllObstacles();
+
     const visiblePlayers = [...this.players.values()].filter((p) => {
       // Always show self and teammates
       if (p.id === playerId || p.team === viewer.team) return true;
@@ -105,7 +132,15 @@ export class GameState {
       const dist = distance(viewer.position, p.position);
       if (dist > viewer.visionRadius) return false;
       // Check line of sight
-      return hasLineOfSight(viewer.position, p.position, OBSTACLES);
+      return hasLineOfSight(viewer.position, p.position, allObstacles);
+    });
+
+    // Disguise: cops see disguised thieves as cops
+    const processedPlayers = visiblePlayers.map((p) => {
+      if (p.isDisguised && viewer.team === 'cop' && p.id !== playerId) {
+        return { ...p, team: 'cop' as Team, isDisguised: false };
+      }
+      return p;
     });
 
     return {
@@ -113,10 +148,10 @@ export class GameState {
       phase: this.phase,
       matchTimerMs: this.matchTimerMs,
       headStartTimerMs: this.headStartTimerMs,
-      players: visiblePlayers,
+      players: processedPlayers,
       storages: this.storages,
       jail: this.jail,
-      obstacles: OBSTACLES,
+      obstacles: allObstacles,
       stolenCoins: this.stolenCoins,
       totalCoins: TOTAL_COINS,
     };
