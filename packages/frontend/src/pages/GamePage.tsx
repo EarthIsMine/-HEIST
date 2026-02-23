@@ -2,6 +2,7 @@ import styled from 'styled-components';
 import { GameCanvas } from '../components/game/GameCanvas';
 import { HUD } from '../components/game/HUD';
 import { SkillBar } from '../components/game/SkillBar';
+import { MobileDPad } from '../components/game/MobileDPad';
 import { ResultModal, AbortModal } from '../components/game/ResultModal';
 
 const GameContainer = styled.div`
@@ -18,6 +19,7 @@ export function GamePage() {
       <HUD />
       <GameCanvas />
       <SkillBar />
+      <MobileDPad />
       <ResultModal />
       <AbortModal />
     </GameContainer>

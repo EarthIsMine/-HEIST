@@ -98,6 +98,16 @@ function stopInputLoop(): void {
   }
 }
 
+export function addKey(code: string): void {
+  keys.add(code);
+  startInputLoop();
+}
+
+export function removeKey(code: string): void {
+  keys.delete(code);
+  if (keys.size === 0) stopInputLoop();
+}
+
 export function initKeyboard(): () => void {
   const moveKeyCodes = ['KeyW', 'KeyA', 'KeyS', 'KeyD', 'ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'];
 
