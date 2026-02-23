@@ -3,7 +3,6 @@ import {
   TICK_MS,
   MATCH_DURATION_MS,
   HEAD_START_MS,
-  TOTAL_COINS,
 } from '@heist/shared';
 import { GameState, type PlayerInit } from './GameState.js';
 import { updatePlayerMovement, resolveObstacleCollision } from './physics.js';
@@ -180,8 +179,9 @@ export class GameLoop {
   }
 
   private checkWinConditions(): GameResult | null {
-    // Thieves win: all coins stolen
-    if (this.state.stolenCoins >= TOTAL_COINS) {
+    // Thieves win: all storages emptied
+    const allEmpty = this.state.storages.every((s) => s.remainingCoins <= 0);
+    if (allEmpty) {
       return this.buildResult('thief', 'all_coins_stolen');
     }
 

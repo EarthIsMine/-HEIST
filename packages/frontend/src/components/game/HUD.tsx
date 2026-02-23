@@ -100,6 +100,7 @@ export function HUD() {
 
   const totalStolen = Math.floor(snapshot.stolenCoins);
   const totalCoins = snapshot.totalCoins;
+  const remainingCoins = Math.ceil(snapshot.storages.reduce((sum, s) => sum + s.remainingCoins, 0));
   const jailCount = snapshot.jail.inmates.length;
 
   const headStartSec = Math.ceil(snapshot.headStartTimerMs / 1000);
@@ -117,9 +118,15 @@ export function HUD() {
         </Panel>
 
         <Panel style={{ textAlign: 'center' }}>
-          <CoinsInfo>
-            {totalStolen}/{totalCoins} <span>coins stolen</span>
-          </CoinsInfo>
+          {myTeam === 'cop' ? (
+            <CoinsInfo>
+              {remainingCoins} <span>coins remaining</span>
+            </CoinsInfo>
+          ) : (
+            <CoinsInfo>
+              {totalStolen}/{totalCoins} <span>coins stolen</span>
+            </CoinsInfo>
+          )}
           {jailCount > 0 && <JailInfo>{jailCount}/{THIEF_COUNT} thieves jailed</JailInfo>}
         </Panel>
 
