@@ -29,6 +29,10 @@ export function wireSocketHandlers(): void {
     useGameStore.getState().setGameResult(result);
   });
 
+  socket.on('player_jailed', () => {
+    useGameStore.getState().showFloatingMessage('ARREST SUCCESS!');
+  });
+
   socket.on('game_aborted', (payload) => {
     console.warn(`[HEIST] Game aborted: ${payload.reason}`);
     useGameStore.getState().setAbortInfo(payload);

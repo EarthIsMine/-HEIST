@@ -219,7 +219,13 @@ export class Room {
         log('Room', `Game ended: ${result.winningTeam} wins (${result.reason})`);
         this.cleanup();
       },
-      undefined,
+      (event) => {
+        if (event.type === 'player_jailed') {
+          this.io.to(this.id).emit('player_jailed', event.data.playerId as string);
+        } else if (event.type === 'player_freed') {
+          this.io.to(this.id).emit('player_freed', event.data.playerId as string);
+        }
+      },
       botIds,
     );
 

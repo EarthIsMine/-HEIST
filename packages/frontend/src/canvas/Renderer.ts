@@ -78,6 +78,25 @@ export class Renderer {
 
       // Fog of war (drawn in screen space, after restoring camera transform)
       this.fogLayer.draw(this.ctx, snapshot, localPlayerId, this.camera.x, this.camera.y, w, h);
+
+      // Floating message
+      const msg = useGameStore.getState().floatingMessage;
+      if (msg) {
+        const elapsed = now - msg.startTime;
+        const duration = 2000;
+        const progress = Math.min(elapsed / duration, 1);
+        const alpha = progress < 0.7 ? 1 : 1 - (progress - 0.7) / 0.3;
+        const yOffset = progress * -40;
+
+        this.ctx.save();
+        this.ctx.globalAlpha = alpha;
+        this.ctx.fillStyle = '#ffd700';
+        this.ctx.font = 'bold 48px system-ui';
+        this.ctx.textAlign = 'center';
+        this.ctx.textBaseline = 'middle';
+        this.ctx.fillText(msg.text, w / 2, h / 2 + yOffset);
+        this.ctx.restore();
+      }
     } else {
       this.ctx.fillStyle = '#0a0e17';
       this.ctx.fillRect(0, 0, w, h);
