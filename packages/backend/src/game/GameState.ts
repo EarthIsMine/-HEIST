@@ -49,6 +49,7 @@ export class GameState {
         team: init.team,
         position: { ...spawnPos },
         velocity: { x: 0, y: 0 },
+        lastDirection: { x: 0, y: -1 },
         visionRadius: init.team === 'cop' ? COP_VISION_RADIUS : THIEF_VISION_RADIUS,
         isJailed: false,
         isStunned: false,
@@ -88,6 +89,9 @@ export class GameState {
   setPlayerDirection(playerId: string, direction: Vec2): void {
     const player = this.players.get(playerId);
     if (!player) return;
+    if (direction.x !== 0 || direction.y !== 0) {
+      player.lastDirection = { ...direction };
+    }
     player.velocity = direction;
   }
 

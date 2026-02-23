@@ -301,13 +301,13 @@ export function tryBuildWall(
 
   state.stolenCoins -= WALL_COST_COINS;
 
-  // Determine facing direction from velocity
-  let dx = player.velocity.x;
-  let dy = player.velocity.y;
+  // Place wall behind the player (opposite of last movement direction)
+  let dx = -player.lastDirection.x;
+  let dy = -player.lastDirection.y;
   const len = Math.sqrt(dx * dx + dy * dy);
   if (len < 0.01) {
-    dx = 1;
-    dy = 0;
+    dx = 0;
+    dy = 1;
   } else {
     dx /= len;
     dy /= len;

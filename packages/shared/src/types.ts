@@ -16,6 +16,7 @@ export interface Player {
   team: Team;
   position: Vec2;
   velocity: Vec2;
+  lastDirection: Vec2;
   visionRadius: number;
   isJailed: boolean;
   isStunned: boolean;
