@@ -216,6 +216,16 @@ export function LobbyPage() {
   const [selectedTeam, setSelectedTeam] = useState<Team>('thief');
   const [availableRooms, setAvailableRooms] = useState<RoomInfo[]>([]);
 
+  // Leave room when wallet disconnects
+  const reset = useLobbyStore((s) => s.reset);
+  useEffect(() => {
+    if (!connected && currentRoom) {
+      getSocket().disconnect();
+      getSocket().connect();
+      reset();
+    }
+  }, [connected, currentRoom, reset]);
+
   // Fetch room list periodically
   useEffect(() => {
     if (currentRoom) return;
