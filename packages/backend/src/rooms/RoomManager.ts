@@ -47,6 +47,16 @@ export class RoomManager {
       log('RoomManager', `Created room ${roomId}`);
     }
 
+    // Prevent same wallet joining any room
+    for (const r of this.rooms.values()) {
+      for (const p of r.players.values()) {
+        if (p.walletAddress === payload.walletAddress) {
+          ack({ ok: false, error: 'This wallet is already in a room' });
+          return;
+        }
+      }
+    }
+
     const success = room.addPlayer(socket.id, payload.name, payload.walletAddress);
     if (!success) {
       ack({ ok: false, error: 'Room is full or game in progress' });

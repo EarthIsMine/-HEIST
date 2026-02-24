@@ -45,6 +45,11 @@ export class Room {
     if (this.players.size >= MAX_PLAYERS) return false;
     if (this.phase !== 'filling') return false;
 
+    // Prevent duplicate wallet address
+    for (const p of this.players.values()) {
+      if (p.walletAddress === walletAddress) return false;
+    }
+
     this.players.set(socketId, {
       id: socketId,
       name,
