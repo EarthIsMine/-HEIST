@@ -8,6 +8,7 @@ import { useLobbyStore } from '../stores/useLobbyStore';
 import { useGameStore } from '../stores/useGameStore';
 import { getSocket } from '../net/socket';
 import { buildEntryFeeTx } from '../solana/entryFee';
+import { playBGM, stopBGM } from '../audio/bgm';
 import { ENTRY_FEE_LAMPORTS, COP_COUNT, THIEF_COUNT } from '@heist/shared';
 import type { Team, RoomInfo } from '@heist/shared';
 
@@ -253,6 +254,11 @@ export function LobbyPage() {
   const [balance, setBalance] = useState<number | null>(null);
   const [selectedTeam, setSelectedTeam] = useState<Team>('thief');
   const [availableRooms, setAvailableRooms] = useState<RoomInfo[]>([]);
+
+  useEffect(() => {
+    playBGM('/bgm/lobby.mp3');
+    return () => stopBGM();
+  }, []);
 
   // Leave room when wallet disconnects
   const reset = useLobbyStore((s) => s.reset);

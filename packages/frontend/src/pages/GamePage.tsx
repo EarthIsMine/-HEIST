@@ -1,9 +1,11 @@
+import { useEffect } from 'react';
 import styled from 'styled-components';
 import { GameCanvas } from '../components/game/GameCanvas';
 import { HUD } from '../components/game/HUD';
 import { SkillBar } from '../components/game/SkillBar';
 import { MobileDPad } from '../components/game/MobileDPad';
 import { ResultModal, AbortModal } from '../components/game/ResultModal';
+import { playBGM, stopBGM } from '../audio/bgm';
 
 const GameContainer = styled.div`
   width: 100%;
@@ -14,6 +16,11 @@ const GameContainer = styled.div`
 `;
 
 export function GamePage() {
+  useEffect(() => {
+    playBGM('/bgm/game.mp3');
+    return () => stopBGM();
+  }, []);
+
   return (
     <GameContainer>
       <HUD />
