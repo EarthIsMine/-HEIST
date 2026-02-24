@@ -51,19 +51,24 @@ export class RoomManager {
     for (const [rid, r] of this.rooms) {
       for (const [oldSocketId, p] of r.players) {
         if (p.walletAddress === payload.walletAddress) {
+          // Same socket re-joining the same room — just ack OK
+          if (oldSocketId === socket.id && rid === roomId) {
+            ack({ ok: true });
+            return;
+          }
           if (r.phase !== 'filling') {
             ack({ ok: false, error: 'This wallet is already in an active game' });
             return;
           }
           log('RoomManager', `Kicking stale session ${oldSocketId} for wallet ${payload.walletAddress}`);
+          r.removePlayer(oldSocketId);
+          this.playerRoomMap.delete(oldSocketId);
           const oldSocket = this.io.sockets.sockets.get(oldSocketId);
-          if (oldSocket) {
+          if (oldSocket && oldSocketId !== socket.id) {
             oldSocket.emit('kicked', 'Same wallet connected from another session');
             oldSocket.leave(rid);
             oldSocket.disconnect(true);
           }
-          r.removePlayer(oldSocketId);
-          this.playerRoomMap.delete(oldSocketId);
           if (r.isEmpty) {
             this.rooms.delete(rid);
           }
@@ -72,13 +77,15 @@ export class RoomManager {
       }
     }
 
+    socket.join(roomId);
+
     const success = room.addPlayer(socket.id, payload.name, payload.walletAddress);
     if (!success) {
+      socket.leave(roomId);
       ack({ ok: false, error: 'Room is full or game in progress' });
       return;
     }
 
-    socket.join(roomId);
     socket.data.roomId = roomId;
     socket.data.playerId = socket.id;
     socket.data.walletAddress = payload.walletAddress;
