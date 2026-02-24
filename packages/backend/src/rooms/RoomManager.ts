@@ -55,11 +55,15 @@ export class RoomManager {
             ack({ ok: false, error: 'This wallet is already in an active game' });
             return;
           }
-          log('RoomManager', `Removing stale session ${oldSocketId} for wallet ${payload.walletAddress}`);
+          log('RoomManager', `Kicking stale session ${oldSocketId} for wallet ${payload.walletAddress}`);
+          const oldSocket = this.io.sockets.sockets.get(oldSocketId);
+          if (oldSocket) {
+            oldSocket.emit('kicked', 'Same wallet connected from another session');
+            oldSocket.leave(rid);
+            oldSocket.disconnect(true);
+          }
           r.removePlayer(oldSocketId);
           this.playerRoomMap.delete(oldSocketId);
-          const oldSocket = this.io.sockets.sockets.get(oldSocketId);
-          if (oldSocket) oldSocket.leave(rid);
           if (r.isEmpty) {
             this.rooms.delete(rid);
           }

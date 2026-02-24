@@ -78,6 +78,8 @@ export interface ServerToClientEvents {
     refundTxSignatures: string[];
   }) => void;
 
+  kicked: (reason: string) => void;
+
   error: (payload: { code: string; message: string }) => void;
 }
 

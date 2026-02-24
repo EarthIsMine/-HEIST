@@ -47,6 +47,12 @@ export function wireSocketHandlers(): void {
     }
   });
 
+  socket.on('kicked', (reason) => {
+    useLobbyStore.getState().reset();
+    useGameStore.getState().reset();
+    alert(reason);
+  });
+
   socket.on('game_aborted', (payload) => {
     console.warn(`[HEIST] Game aborted: ${payload.reason}`);
     useGameStore.getState().setAbortInfo(payload);
