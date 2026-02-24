@@ -47,12 +47,23 @@ export class RoomManager {
       log('RoomManager', `Created room ${roomId}`);
     }
 
-    // Prevent same wallet joining any room
-    for (const r of this.rooms.values()) {
-      for (const p of r.players.values()) {
+    // Kick stale socket if same wallet is already in a room (reconnection)
+    for (const [rid, r] of this.rooms) {
+      for (const [oldSocketId, p] of r.players) {
         if (p.walletAddress === payload.walletAddress) {
-          ack({ ok: false, error: 'This wallet is already in a room' });
-          return;
+          if (r.phase !== 'filling') {
+            ack({ ok: false, error: 'This wallet is already in an active game' });
+            return;
+          }
+          log('RoomManager', `Removing stale session ${oldSocketId} for wallet ${payload.walletAddress}`);
+          r.removePlayer(oldSocketId);
+          this.playerRoomMap.delete(oldSocketId);
+          const oldSocket = this.io.sockets.sockets.get(oldSocketId);
+          if (oldSocket) oldSocket.leave(rid);
+          if (r.isEmpty) {
+            this.rooms.delete(rid);
+          }
+          break;
         }
       }
     }
