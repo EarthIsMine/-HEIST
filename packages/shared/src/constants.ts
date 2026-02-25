@@ -3,7 +3,7 @@ export const MAP_HEIGHT = 2400;
 export const PLAYER_RADIUS = 28;
 
 export const TICK_MS = 50;
-export const MATCH_DURATION_MS = 10 * 60 * 1000;
+export const MATCH_DURATION_MS = 5 * 60 * 1000;
 export const HEAD_START_MS = 5 * 1000;
 
 export const PLAYER_SPEED = 260;
