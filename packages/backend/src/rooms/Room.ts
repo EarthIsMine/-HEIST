@@ -13,7 +13,7 @@ import type {
 import { MAX_PLAYERS, ENTRY_FEE_LAMPORTS, COP_COUNT, THIEF_COUNT } from '@heist/shared';
 import { GameLoop } from '../game/GameLoop.js';
 import type { PlayerInit } from '../game/GameState.js';
-import { refundAllPlayers } from '../solana/payout.js';
+
 import { log } from '../utils/logger.js';
 
 type TypedIO = Server<ClientToServerEvents, ServerToClientEvents, InterServerEvents, SocketData>;
@@ -66,46 +66,13 @@ export class Room {
   }
 
   removePlayer(socketId: string): void {
-    // Capture wallet before deleting
-    const disconnectedWallet = this.socketMap.get(socketId) || '';
-
     this.players.delete(socketId);
     this.socketMap.delete(socketId);
     this.teamPreference.delete(socketId);
 
     if (this.gameLoop) {
-      log('Room', `Player ${socketId} left during game, aborting match`);
-      this.gameLoop.stop();
-      this.gameLoop = null;
-      this.phase = 'ended';
-
-      const reason = 'A player disconnected. Entry fees will be refunded.';
-
-      // Refund all players (including the one who disconnected)
-      if (ENTRY_FEE_LAMPORTS > 0) {
-        const allWallets = [...this.players.values()]
-          .map((p) => ({ walletAddress: p.walletAddress }));
-        if (disconnectedWallet && disconnectedWallet !== 'bot') {
-          allWallets.push({ walletAddress: disconnectedWallet });
-        }
-
-        // Emit immediate abort notice, then refund in background
-        this.io.to(this.id).emit('game_aborted', {
-          reason,
-          refundTxSignatures: [],
-        });
-        this.cleanup();
-
-        refundAllPlayers(allWallets, ENTRY_FEE_LAMPORTS).then((sigs) => {
-          log('Room', `Refund complete: ${sigs.length} transactions`);
-        });
-      } else {
-        this.io.to(this.id).emit('game_aborted', {
-          reason,
-          refundTxSignatures: [],
-        });
-        this.cleanup();
-      }
+      log('Room', `Player ${socketId} left during game, converting to bot`);
+      this.gameLoop.convertToBot(socketId);
       return;
     }
 
@@ -325,6 +292,16 @@ export class Room {
 
     this.onCleanup?.(playerIds);
     log('Room', `Room ${this.id} cleaned up`);
+  }
+
+  abort(reason: string): void {
+    if (!this.gameLoop) return;
+    log('Room', `Aborting game in room ${this.id}: ${reason}`);
+    this.io.to(this.id).emit('game_aborted', {
+      reason,
+      refundTxSignatures: [],
+    });
+    this.cleanup();
   }
 
   get isEmpty(): boolean {

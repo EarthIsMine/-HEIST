@@ -73,6 +73,7 @@ httpServer.listen(PORT, () => {
 
 // Graceful shutdown for tsx watch
 function shutdown() {
+  roomManager.abortAllGames('Server is restarting');
   io.close();
   httpServer.close(() => process.exit(0));
   setTimeout(() => process.exit(0), 500);

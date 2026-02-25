@@ -171,6 +171,11 @@ export class GameLoop {
     }
   }
 
+  convertToBot(playerId: string): void {
+    this.botAI.registerBot(playerId);
+    log('GameLoop', `Player ${playerId} converted to bot`);
+  }
+
   cancelSkill(playerId: string): void {
     const event = cancelPlayerSkill(this.state, playerId);
     if (event) {

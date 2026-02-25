@@ -17,6 +17,15 @@ const BarContainer = styled.div`
   display: flex;
   gap: 8px;
   z-index: 10;
+
+  @media (pointer: coarse) {
+    left: auto;
+    right: 16px;
+    bottom: 80px;
+    transform: none;
+    flex-direction: column;
+    align-items: flex-end;
+  }
 `;
 
 const SkillButton = styled.button<{ $enabled: boolean; $color: string }>`
@@ -29,9 +38,16 @@ const SkillButton = styled.button<{ $enabled: boolean; $color: string }>`
   border: 2px solid ${(p) => (p.$enabled ? p.$color : '#444')};
   pointer-events: auto;
   transition: all 0.15s;
+  white-space: nowrap;
 
   &:hover {
     filter: ${(p) => (p.$enabled ? 'brightness(1.2)' : 'none')};
+  }
+
+  @media (pointer: coarse) {
+    padding: 12px 16px;
+    font-size: 13px;
+    border-radius: 12px;
   }
 `;
 

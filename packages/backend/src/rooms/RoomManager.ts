@@ -8,7 +8,7 @@ import type {
   Team,
 } from '@heist/shared';
 import type { RoomInfo } from '@heist/shared';
-import { v4 as uuidv4 } from 'uuid';
+
 import { Room } from './Room.js';
 import { log } from '../utils/logger.js';
 
@@ -161,6 +161,12 @@ export class RoomManager {
     if (room.isEmpty) {
       this.rooms.delete(room.id);
       log('RoomManager', `Room ${room.id} deleted (empty)`);
+    }
+  }
+
+  abortAllGames(reason: string): void {
+    for (const room of this.rooms.values()) {
+      room.abort(reason);
     }
   }
 
