@@ -6,7 +6,8 @@
   "scripts": {
     "dev": "node --loader ts-node/esm --experimental-specifier-resolution=node src/main.ts",
     "build": "tsc",
-    "start": "node dist/main.js"
+    "start": "node dist/main.js",
+    "canary:smoke": "bash ./scripts/canary-smoke.sh"
   },
   "dependencies": {
     "@heist/shared": "*",

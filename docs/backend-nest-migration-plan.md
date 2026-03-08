@@ -48,7 +48,7 @@
 - 완료: 3단계(Room lifecycle 경로 이식)
 - 완료: 4단계(실제 RoomManager/GameLoop 경로를 Nest Gateway에 연결)
 - 완료: 5단계(Nest 로컬 `/_metrics`, `/_state/rooms`, `/_state/consistency`, `/_state/recovery-drill` 연동)
-- 진행중: 6단계(룸 해시 기반 트래픽 카나리 + strict 게이트)
+- 진행중: 6단계(룸 해시 기반 트래픽 카나리 + strict 게이트, 10% 검증 완료)
 
 ## 6단계 환경변수
 
@@ -63,3 +63,5 @@
 - `GET /_migrate/room/decision?roomId=default:abc`로 라우팅 판정 확인
 - strict on + 비대상 roomId일 때 `join_room`/`/_migrate/room/join`에서 `route=legacy` 응답 확인
 - `/_metrics.migration.nestTrafficCanary`로 현재 카나리 설정/샘플 판정 확인
+
+참고 런북: `docs/backend-stage6-nest-traffic-rollout.md`
