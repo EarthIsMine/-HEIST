@@ -23,7 +23,7 @@
 - `join_room` 관련 검증/아이템포턴시/샤딩 게이트를 Nest 서비스로 이식
 - 카나리 룸 타입만 Nest 경로 사용
 
-4. 실시간 이벤트 계층 이식
+4. 실시간 이벤트 계층 이식 [진행중]
 - Socket Gateway를 Nest로 추가
 - room partition ordering/queue 정책 반영
 
@@ -45,8 +45,8 @@
 
 - 완료: 1단계
 - 완료: 2단계(운영 엔드포인트 확장)
-- 진행중: 3단계(`/_migrate/room/join`으로 join 정책 포팅 시작)
-- 다음: 4단계(실시간 이벤트 계층 이식)
+- 진행중: 4단계(Socket Gateway 추가, `list_rooms`/`join_room` 1차 이식)
+- 다음: 5단계(상태 저장/복구 체계 이식)
 
 ## 2단계 환경변수
 
