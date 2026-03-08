@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Post } from '@nestjs/common';
+import { BadRequestException, Body, Controller, Get, Post } from '@nestjs/common';
 import { metricsRegistry } from '../../../backend/src/observability/MetricsRegistry.js';
 import { roomStateRepository } from '../../../backend/src/state/RoomStateRepository.js';
 import { RuntimeCoreService } from '../services/runtime-core.service';
@@ -37,11 +37,8 @@ export class OpsController {
     const rtoSec = Number(body?.rtoSec);
     const rpoEvents = Number(body?.rpoEvents);
     if (!Number.isFinite(rtoSec) || !Number.isFinite(rpoEvents)) {
-      return {
-        ok: false,
-        error: 'rtoSec and rpoEvents must be numbers',
-        migrationPhase: 'phase-2-ops-endpoints',
-      };
+      // legacy API와 동일하게 잘못된 입력은 400으로 처리한다.
+      throw new BadRequestException('rtoSec and rpoEvents must be numbers');
     }
     metricsRegistry.recordRecoveryDrill(rtoSec, rpoEvents);
     return {
